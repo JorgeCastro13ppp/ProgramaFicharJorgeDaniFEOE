@@ -14,7 +14,7 @@ data class Curso(
 )
 
 @Composable
-fun FormacionScreen() {
+fun FormacionesScreen() {
 
     val cursos = listOf(
         Curso("Prevención de riesgos laborales", "Completado"),

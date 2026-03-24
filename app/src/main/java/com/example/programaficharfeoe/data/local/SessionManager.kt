@@ -1,33 +1,26 @@
 package com.example.programaficharfeoe.data.local
 
 import android.content.Context
-import androidx.datastore.preferences.core.*
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import android.content.SharedPreferences
 
-val Context.dataStore by preferencesDataStore(name = "session_prefs")
+class SessionManager(context: Context) {
 
-class SessionManager(private val context: Context) {
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("app_session", Context.MODE_PRIVATE)
 
     companion object {
-        val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
+        private const val KEY_TOKEN = "token"
     }
 
-    suspend fun saveLogin() {
-        context.dataStore.edit { prefs ->
-            prefs[IS_LOGGED_IN] = true
-        }
+    fun saveToken(token: String) {
+        prefs.edit().putString(KEY_TOKEN, token).apply()
     }
 
-    suspend fun logout() {
-        context.dataStore.edit { prefs ->
-            prefs[IS_LOGGED_IN] = false
-        }
+    fun getToken(): String? {
+        return prefs.getString(KEY_TOKEN, null)
     }
 
-    val isLoggedIn: Flow<Boolean> = context.dataStore.data
-        .map { prefs ->
-            prefs[IS_LOGGED_IN] ?: false
-        }
+    fun clearSession() {
+        prefs.edit().clear().apply()
+    }
 }

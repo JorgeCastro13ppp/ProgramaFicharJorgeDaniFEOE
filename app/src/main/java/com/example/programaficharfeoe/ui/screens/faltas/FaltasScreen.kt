@@ -4,58 +4,50 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-data class Falta(
-    val fecha: String,
-    val motivo: String
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.ui.viewmodel.FaltasViewModel
 
 @Composable
-fun FaltasScreen() {
+fun FaltasScreen(viewModel: FaltasViewModel = viewModel()) {
 
-    val faltas = listOf(
-        Falta("10/03/2025", "Enfermedad"),
-        Falta("22/02/2025", "Asuntos personales")
-    )
+    LaunchedEffect(Unit) {
+        viewModel.cargarFaltas()
+    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
 
         Text(
-            text = "Faltas de asistencia",
+            text = "Faltas",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn {
-            items(faltas) { falta ->
-                FaltaItem(falta)
+        if (viewModel.isLoading) {
+            CircularProgressIndicator()
+        } else {
+
+            LazyColumn {
+                items(viewModel.faltas) { falta ->
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+
+                            Text(text = falta.fecha)
+                            Text(text = falta.tipo)
+                            Text(text = falta.descripcion)
+                        }
+                    }
+                }
             }
-        }
-    }
-}
-
-@Composable
-fun FaltaItem(falta: Falta) {
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(6.dp)
-    ) {
-
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Text("Fecha: ${falta.fecha}")
-            Text("Motivo: ${falta.motivo}")
         }
     }
 }

@@ -7,21 +7,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-data class Epi(
-    val nombre: String,
-    val estado: String,
-    val fecha: String
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.data.model.Documento
+import com.example.programaficharfeoe.viewmodel.EpisViewModel
 
 @Composable
-fun EpisScreen() {
+fun EpisScreen(viewModel: EpisViewModel = viewModel()) {
 
-    val epis = listOf(
-        Epi("Casco de seguridad", "Entregado", "01/01/2025"),
-        Epi("Chaleco reflectante", "Entregado", "15/02/2025"),
-        Epi("Botas de seguridad", "Pendiente", "-")
-    )
+    // 🔥 Cargar datos al entrar
+    LaunchedEffect(Unit) {
+        viewModel.cargarEpis()
+    }
 
     Column(
         modifier = Modifier
@@ -36,18 +32,31 @@ fun EpisScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn {
-            items(epis) { epi ->
-                EpiItem(epi)
+        when {
+            viewModel.isLoading -> {
+                CircularProgressIndicator()
+            }
+
+            viewModel.error != null -> {
+                Text(
+                    text = viewModel.error!!,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            else -> {
+                LazyColumn {
+                    items(viewModel.epis) { epi ->
+                        EpiItem(epi)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun EpiItem(epi: Epi) {
-
-    var mensaje by remember { mutableStateOf("") }
+fun EpiItem(epi: Documento) {
 
     Card(
         modifier = Modifier
@@ -65,30 +74,11 @@ fun EpiItem(epi: Epi) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "Estado: ${epi.estado}",
-                color = if (epi.estado == "Entregado")
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.error
-            )
+            Text("Estado: ${epi.nombre}")
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text("Fecha: ${epi.fecha}")
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(onClick = {
-                mensaje = "Disponible próximamente (backend)"
-            }) {
-                Text("Ver detalle")
-            }
-
-            if (mensaje.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(mensaje)
-            }
+            Text("Fecha: ${epi.tipo}")
         }
     }
 }

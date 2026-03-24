@@ -29,7 +29,7 @@ fun HomeScreen(
     ) {
 
         Text(
-            text = "Bienvenido 👋",
+            text = "Bienvenido",
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -42,25 +42,59 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DashboardCard("Fichaje QR", "Registrar entrada/salida", onGoToFichaje)
+        DashboardCard(
+            title = "Fichaje QR",
+            description = "Registrar entrada/salida",
+            onClick = onGoToFichaje
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("Vacaciones", "Solicitar días libres", onGoToVacaciones)
+        DashboardCard(
+            title = "Vacaciones",
+            description = "Solicitar días libres",
+            onClick = onGoToVacaciones
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("Nóminas", "Consultar recibos", onGoToNominas)
+        DashboardCard(
+            title = "Nóminas",
+            description = "Consultar recibos",
+            onClick = onGoToNominas
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("Faltas", "Consultar ausencias", onGoToFaltas)
+        DashboardCard(
+            title = "Faltas",
+            description = "Consultar ausencias",
+            onClick = onGoToFaltas
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("Reconocimientos", "Control médico laboral", onGoToReconocimientos)
+        DashboardCard(
+            title = "Reconocimientos",
+            description = "Control médico laboral",
+            onClick = onGoToReconocimientos
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("Formación", "Cursos y diplomas", onGoToFormacion)
+        DashboardCard(
+            title = "Formación",
+            description = "Cursos y diplomas",
+            onClick = onGoToFormacion
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
-        DashboardCard("EPIs", "Equipos de protección", onGoToEpis)
+        DashboardCard(
+            title = "EPIs",
+            description = "Equipos de protección",
+            onClick = onGoToEpis
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -76,18 +110,15 @@ fun DashboardCard(
     description: String,
     onClick: () -> Unit
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
-
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge
@@ -105,7 +136,6 @@ fun DashboardCard(
 
 @Composable
 fun LogoutCard(onLogout: () -> Unit) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,11 +145,9 @@ fun LogoutCard(onLogout: () -> Unit) {
         ),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
-
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-
             Text(
                 text = "Cerrar sesión",
                 style = MaterialTheme.typography.titleLarge,

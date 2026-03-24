@@ -7,22 +7,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-data class Nomina(
-    val mes: String,
-    val anio: Int
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.data.model.Documento
+import com.example.programaficharfeoe.viewmodel.NominasViewModel
 
 @Composable
-fun NominasScreen() {
+fun NominasScreen(viewModel: NominasViewModel = viewModel()) {
 
-    // 🔥 Datos simulados (luego vendrán del backend)
-    val nominas = listOf(
-        Nomina("Enero", 2025),
-        Nomina("Febrero", 2025),
-        Nomina("Marzo", 2025),
-        Nomina("Abril", 2025)
-    )
+    // 🔥 Cargar datos al entrar
+    LaunchedEffect(Unit) {
+        viewModel.cargarNominas()
+    }
 
     Column(
         modifier = Modifier
@@ -31,22 +26,37 @@ fun NominasScreen() {
     ) {
 
         Text(
-            text = "Mis Nóminas",
-            style = MaterialTheme.typography.headlineSmall
+            text = "Nóminas",
+            style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn {
-            items(nominas) { nomina ->
-                NominaItem(nomina)
+        when {
+            viewModel.isLoading -> {
+                CircularProgressIndicator()
+            }
+
+            viewModel.error != null -> {
+                Text(
+                    text = viewModel.error!!,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            else -> {
+                LazyColumn {
+                    items(viewModel.nominas) { nomina ->
+                        NominaItem(nomina)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun NominaItem(nomina: Nomina) {
+fun NominaItem(nomina: Documento) {
 
     var mensaje by remember { mutableStateOf("") }
 
@@ -57,22 +67,27 @@ fun NominaItem(nomina: Nomina) {
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
 
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Text(
+                text = nomina.nombre,
+                style = MaterialTheme.typography.titleMedium
+            )
 
-                Text("${nomina.mes} ${nomina.anio}")
+            Spacer(modifier = Modifier.height(4.dp))
 
-                Button(onClick = {
-                    mensaje = "Disponible próximamente (backend)"
-                }) {
-                    Text("Ver")
-                }
+            Text("Estado: ${nomina.nombre}")
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text("Fecha: ${nomina.tipo}")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(onClick = {
+                mensaje = "PDF disponible cuando backend esté listo"
+            }) {
+                Text("Ver PDF")
             }
 
             if (mensaje.isNotEmpty()) {

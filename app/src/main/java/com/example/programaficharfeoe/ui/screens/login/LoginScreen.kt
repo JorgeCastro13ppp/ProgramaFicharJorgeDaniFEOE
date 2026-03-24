@@ -3,95 +3,92 @@ package com.example.programaficharfeoe.ui.screens.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
     onLoginSuccess: () -> Unit
 ) {
 
+    val context = LocalContext.current
+
+    val viewModel: LoginViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return LoginViewModel(context) as T
+            }
+        }
+    )
+
+    val username = viewModel.username
+    val password = viewModel.password
+    val isLoading = viewModel.isLoading
     val loginResult = viewModel.loginResult
 
+    // 🔥 Cuando login sea OK → navegar
     LaunchedEffect(loginResult) {
-        if (loginResult == "success") {
-            viewModel.resetLoginState()
+        if (loginResult == "OK") {
             onLoginSuccess()
+            viewModel.resetLoginState()
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center
     ) {
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+        Text(
+            text = "Inicio de sesión",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = username,
+            onValueChange = { viewModel.username = it },
+            label = { Text("Usuario") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { viewModel.password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { viewModel.login() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
         ) {
+            Text(if (isLoading) "Cargando..." else "Entrar")
+        }
 
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Inicio de sesión",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                OutlinedTextField(
-                    value = viewModel.username,
-                    onValueChange = { viewModel.username = it },
-                    label = { Text("Usuario") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = viewModel.password,
-                    onValueChange = { viewModel.password = it },
-                    label = { Text("Contraseña") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Button(
-                    onClick = { viewModel.login() },
-                    enabled = !viewModel.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text("Entrar")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (viewModel.isLoading) {
-                    CircularProgressIndicator()
-                }
-
-                if (loginResult == "error") {
-                    Text(
-                        text = "Credenciales incorrectas",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
+        // 🔴 Error
+        if (loginResult == "ERROR") {
+            Text(
+                text = "Credenciales incorrectas",
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }
