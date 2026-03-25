@@ -1,35 +1,40 @@
 package com.example.programaficharfeoe.data.remote
 
+import com.example.programaficharfeoe.data.local.SessionManager
 import okhttp3.OkHttpClient
+import okhttp3.Interceptor
+import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private var token: String? = null
+    private const val BASE_URL = "http://192.168.1.171:8080/"
 
-    fun setToken(newToken: String) {
-        token = newToken
+    private val authInterceptor = Interceptor { chain ->
+
+        val originalRequest: Request = chain.request()
+
+        val token = SessionManager.getToken()
+
+        val newRequest = if (token != null) {
+            originalRequest.newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+        } else {
+            originalRequest
+        }
+
+        chain.proceed(newRequest)
     }
 
     private val client = OkHttpClient.Builder()
-        .addInterceptor { chain ->
-            val request = chain.request().newBuilder()
-
-            token?.let {
-                request.addHeader("Authorization", "Bearer $it")
-            }
-
-            chain.proceed(request.build())
-        }
+        .addInterceptor(authInterceptor)
         .build()
 
-    val instance: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl("http://192.168.1.171:8080/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ApiService::class.java)
-    }
+    val instance: Retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 }

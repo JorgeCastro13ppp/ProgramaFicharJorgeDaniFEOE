@@ -14,8 +14,24 @@ interface ApiService {
     @GET("faltas")
     suspend fun getFaltas(): Response<List<Falta>>
 
-    @GET("documentos/{tipo}")
+    @GET("documentos")
     suspend fun getDocumentos(
-        @Path("tipo") tipo: String
+        @Query("tipo") tipo: String
     ): Response<List<Documento>>
+
+    @GET("vacaciones")
+    suspend fun getVacaciones(): Response<List<Vacacion>>
+
+    @POST("vacaciones")
+    suspend fun solicitarVacaciones(
+        @Body request: VacacionesRequest
+    ): Response<Map<String, String>>
+
+    @POST("fichar")
+    suspend fun fichar(
+        @Body request: FichajeRequest
+    ): Response<Map<String, String>>
+
+    @GET("fichajes")
+    suspend fun getFichajes(): Response<List<Fichaje>>
 }

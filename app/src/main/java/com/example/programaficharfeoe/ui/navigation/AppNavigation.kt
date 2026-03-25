@@ -1,36 +1,29 @@
 package com.example.programaficharfeoe.ui.navigation
 
-import androidx.annotation.OptIn
-import androidx.camera.core.ExperimentalGetImage
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
-import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.ui.screens.login.LoginScreen
 import com.example.programaficharfeoe.ui.screens.home.HomeScreen
-import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
 import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
-import com.example.programaficharfeoe.ui.screens.qr.QRScreen
+import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
 import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
-import com.example.programaficharfeoe.ui.screens.nominas.NominasScreen
-import com.example.programaficharfeoe.ui.screens.reconocimientos.ReconocimientosScreen
-import com.example.programaficharfeoe.ui.screens.formacion.FormacionesScreen
-import com.example.programaficharfeoe.ui.screens.epis.EpisScreen
+import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
+import com.example.programaficharfeoe.data.local.SessionManager
 
-@OptIn(ExperimentalGetImage::class)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    onScanQR: (String) -> Unit
+) {
 
     val navController = rememberNavController()
     val context = LocalContext.current
-    val sessionManager = remember { SessionManager(context) }
 
-    // 🔥 decidir pantalla inicial
-    val startDestination = if (sessionManager.getToken() != null) {
-        "home"
-    } else {
-        "login"
-    }
+    // Inicializar sesión
+    SessionManager.init(context)
+
+    val startDestination =
+        if (SessionManager.getToken() != null) "home" else "login"
 
     NavHost(
         navController = navController,
@@ -52,14 +45,14 @@ fun AppNavigation() {
         composable("home") {
             HomeScreen(
                 onGoToFichaje = { navController.navigate("fichaje") },
-                onGoToFaltas = { navController.navigate("faltas") },
                 onGoToVacaciones = { navController.navigate("vacaciones") },
                 onGoToNominas = { navController.navigate("nominas") },
+                onGoToFaltas = { navController.navigate("faltas") },
                 onGoToReconocimientos = { navController.navigate("reconocimientos") },
                 onGoToFormacion = { navController.navigate("formacion") },
                 onGoToEpis = { navController.navigate("epis") },
                 onLogout = {
-                    sessionManager.clearSession()
+                    SessionManager.clearSession()
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
@@ -67,22 +60,52 @@ fun AppNavigation() {
             )
         }
 
-        // 📌 PANTALLAS
+        // 📷 FICHAJE QR
+        composable("fichaje") {
+            FichajeScreen(
+                onScanQR = { tipo ->
+                    onScanQR(tipo)
+                }
+            )
+        }
 
-        composable("faltas") { FaltasScreen() }
+        // 📄 DOCUMENTOS (GENÉRICO)
+        composable("nominas") {
+            DocumentosScreen(
+                tipo = "nomina",
+                titulo = "Nóminas"
+            )
+        }
 
-        composable("fichaje") { FichajeScreen() }
+        composable("reconocimientos") {
+            DocumentosScreen(
+                tipo = "reconocimiento",
+                titulo = "Reconocimientos"
+            )
+        }
 
-        composable("qr") { QRScreen() }
+        composable("formacion") {
+            DocumentosScreen(
+                tipo = "formacion",
+                titulo = "Formación"
+            )
+        }
 
-        composable("vacaciones") { VacacionesScreen() }
+        composable("epis") {
+            DocumentosScreen(
+                tipo = "epi",
+                titulo = "EPIs"
+            )
+        }
 
-        composable("nominas") { NominasScreen() }
+        // 📉 FALTAS
+        composable("faltas") {
+            FaltasScreen()
+        }
 
-        composable("reconocimientos") { ReconocimientosScreen() }
-
-        composable("formacion") { FormacionesScreen() }
-
-        composable("epis") { EpisScreen() }
+        // 🌴 VACACIONES
+        composable("vacaciones") {
+            VacacionesScreen()
+        }
     }
 }

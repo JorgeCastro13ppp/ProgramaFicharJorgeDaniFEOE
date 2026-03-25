@@ -3,21 +3,20 @@ package com.example.programaficharfeoe.data.local
 import android.content.Context
 import android.content.SharedPreferences
 
-class SessionManager(context: Context) {
+object SessionManager {
 
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("app_session", Context.MODE_PRIVATE)
+    private lateinit var prefs: SharedPreferences
 
-    companion object {
-        private const val KEY_TOKEN = "token"
+    fun init(context: Context) {
+        prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
     }
 
     fun saveToken(token: String) {
-        prefs.edit().putString(KEY_TOKEN, token).apply()
+        prefs.edit().putString("token", token).apply()
     }
 
     fun getToken(): String? {
-        return prefs.getString(KEY_TOKEN, null)
+        return prefs.getString("token", null)
     }
 
     fun clearSession() {

@@ -2,108 +2,117 @@ package com.example.programaficharfeoe.ui.screens.vacaciones
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.text.SimpleDateFormat
-import java.util.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.viewmodel.VacacionesViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VacacionesScreen() {
+fun VacacionesScreen(
+    viewModel: VacacionesViewModel = viewModel()
+) {
+
+    val vacaciones = viewModel.vacaciones.value
+    val isLoading = viewModel.isLoading.value
+    val error = viewModel.error.value
+    val solicitudOk = viewModel.solicitudOk.value
+    val errorSolicitud = viewModel.errorSolicitud.value
 
     var fechaInicio by remember { mutableStateOf("") }
     var fechaFin by remember { mutableStateOf("") }
-    var motivo by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
+    var errorFechas by remember { mutableStateOf<String?>(null) }
 
-    var error by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        viewModel.cargarVacaciones()
+    }
 
-    var showInicioPicker by remember { mutableStateOf(false) }
-    var showFinPicker by remember { mutableStateOf(false) }
+    // 🔹 VALIDACIÓN
+    fun validarFechas(inicio: String, fin: String): String? {
 
-    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        if (inicio.isBlank() || fin.isBlank()) {
+            return "Debes seleccionar ambas fechas"
+        }
+
+        fun parseFecha(fecha: String): java.util.Calendar {
+            val parts = fecha.split("-")
+            val cal = java.util.Calendar.getInstance()
+            cal.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
+            cal.set(java.util.Calendar.MILLISECOND, 0)
+            return cal
+        }
+
+        val inicioCal = parseFecha(inicio)
+        val finCal = parseFecha(fin)
+
+        // fin antes que inicio
+        if (finCal.before(inicioCal)) {
+            return "La fecha fin no puede ser anterior a la de inicio"
+        }
+
+        // fechas pasadas
+        val hoy = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+
+        if (inicioCal.before(hoy)) {
+            return "No puedes seleccionar fechas pasadas"
+        }
+
+        return null
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center
+            .padding(16.dp)
     ) {
 
         Text(
-            text = "Solicitud de Vacaciones",
+            text = "Vacaciones",
             style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 🔹 Fecha inicio
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showInicioPicker = true }
-        ) {
-            OutlinedTextField(
-                value = fechaInicio,
-                onValueChange = {},
-                label = { Text("Fecha inicio") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                enabled = false
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 🔹 Fecha fin
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showFinPicker = true }
-        ) {
-            OutlinedTextField(
-                value = fechaFin,
-                onValueChange = {},
-                label = { Text("Fecha fin") },
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                enabled = false
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 🔹 Motivo
-        OutlinedTextField(
-            value = motivo,
-            onValueChange = { motivo = it },
-            label = { Text("Motivo") },
-            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Text("Solicitar vacaciones")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        DatePickerField(
+            label = "Fecha inicio",
+            selectedDate = fechaInicio,
+            onDateSelected = { fechaInicio = it }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        DatePickerField(
+            label = "Fecha fin",
+            selectedDate = fechaFin,
+            onDateSelected = { fechaFin = it }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Button(
             onClick = {
 
-                // 🔥 VALIDACIONES
-                when {
-                    fechaInicio.isEmpty() || fechaFin.isEmpty() || motivo.isEmpty() -> {
-                        error = "Todos los campos son obligatorios"
-                        mensaje = ""
-                    }
+                val error = validarFechas(fechaInicio, fechaFin)
 
-                    !validarFechas(fechaInicio, fechaFin, formatter) -> {
-                        error = "La fecha fin debe ser posterior a la fecha inicio"
-                        mensaje = ""
-                    }
-
-                    else -> {
-                        error = ""
-                        mensaje = "Solicitud enviada correctamente ✅"
-                    }
+                if (error != null) {
+                    errorFechas = error
+                } else {
+                    errorFechas = null
+                    viewModel.solicitarVacaciones(fechaInicio, fechaFin)
+                    fechaInicio = ""
+                    fechaFin = ""
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -111,79 +120,129 @@ fun VacacionesScreen() {
             Text("Enviar solicitud")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // 🔴 ERROR
-        if (error.isNotEmpty()) {
+        // 🔹 ERROR VALIDACIÓN
+        errorFechas?.let {
             Text(
-                text = error,
+                text = it,
                 color = MaterialTheme.colorScheme.error
             )
         }
 
-        // 🟢 OK
-        if (mensaje.isNotEmpty()) {
-            Text(mensaje)
+        // 🔹 RESPUESTA BACKEND
+        if (solicitudOk) {
+            Text("Solicitud enviada correctamente")
         }
-    }
 
-    // 🔥 DatePicker INICIO
-    if (showInicioPicker) {
-        val datePickerState = rememberDatePickerState()
+        errorSolicitud?.let {
+            Text("Error: $it")
+        }
 
-        DatePickerDialog(
-            onDismissRequest = { showInicioPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val millis = datePickerState.selectedDateMillis
-                    if (millis != null) {
-                        fechaInicio = formatter.format(Date(millis))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 🔹 LISTADO
+        when {
+            isLoading -> {
+                Text("Cargando...")
+            }
+
+            error != null -> {
+                Text("Error: $error")
+            }
+
+            else -> {
+                LazyColumn {
+                    items(vacaciones) { v ->
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            elevation = CardDefaults.cardElevation(6.dp)
+                        ) {
+
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+
+                                Text("Inicio: ${v.fechaInicio}")
+                                Text("Fin: ${v.fechaFin}")
+                                Text("Estado: ${v.estado}")
+                            }
+                        }
                     }
-                    showInicioPicker = false
-                }) {
-                    Text("Aceptar")
                 }
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    // 🔥 DatePicker FIN
-    if (showFinPicker) {
-        val datePickerState = rememberDatePickerState()
-
-        DatePickerDialog(
-            onDismissRequest = { showFinPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val millis = datePickerState.selectedDateMillis
-                    if (millis != null) {
-                        fechaFin = formatter.format(Date(millis))
-                    }
-                    showFinPicker = false
-                }) {
-                    Text("Aceptar")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
         }
     }
 }
 
-// 🔥 Función validación fechas
-fun validarFechas(
-    inicio: String,
-    fin: String,
-    formatter: SimpleDateFormat
-): Boolean {
-    return try {
-        val fechaInicio = formatter.parse(inicio)
-        val fechaFin = formatter.parse(fin)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerField(
+    label: String,
+    selectedDate: String,
+    onDateSelected: (String) -> Unit
+) {
 
-        fechaFin.after(fechaInicio)
-    } catch (e: Exception) {
-        false
+    var showDialog by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+
+        OutlinedTextField(
+            value = selectedDate,
+            onValueChange = {},
+            label = { Text(label) },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { showDialog = true }
+        )
+    }
+
+    if (showDialog) {
+        DatePickerDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDialog = false
+
+                    val millis = datePickerState.selectedDateMillis
+                    if (millis != null) {
+
+                        val calendar = java.util.Calendar.getInstance()
+                        calendar.timeInMillis = millis
+
+                        val year = calendar.get(java.util.Calendar.YEAR)
+                        val month = calendar.get(java.util.Calendar.MONTH) + 1
+                        val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+
+                        val formattedDate = String.format(
+                            "%04d-%02d-%02d",
+                            year,
+                            month,
+                            day
+                        )
+
+                        onDateSelected(formattedDate)
+                    }
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 }

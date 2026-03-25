@@ -6,7 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,22 +16,20 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
 
-    val context = LocalContext.current
-
     val viewModel: LoginViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return LoginViewModel(context) as T
+                return LoginViewModel() as T
             }
         }
     )
 
     val username = viewModel.username
     val password = viewModel.password
-    val isLoading = viewModel.isLoading
     val loginResult = viewModel.loginResult
+    val isLoading = viewModel.isLoading
 
-    // 🔥 Cuando login sea OK → navegar
+    // Navegar cuando login OK
     LaunchedEffect(loginResult) {
         if (loginResult == "OK") {
             onLoginSuccess()
@@ -47,12 +44,9 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text(
-            text = "Inicio de sesión",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text("Login", style = MaterialTheme.typography.headlineMedium)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = username,
@@ -61,7 +55,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         OutlinedTextField(
             value = password,
@@ -71,24 +65,19 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = { viewModel.login() },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading
         ) {
-            Text(if (isLoading) "Cargando..." else "Entrar")
+            Text(if (isLoading) "Cargando..." else "Iniciar sesión")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 🔴 Error
         if (loginResult == "ERROR") {
-            Text(
-                text = "Credenciales incorrectas",
-                color = MaterialTheme.colorScheme.error
-            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text("Credenciales incorrectas")
         }
     }
 }

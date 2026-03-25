@@ -1,38 +1,44 @@
 package com.example.programaficharfeoe.viewmodel
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.model.Documento
-import com.example.programaficharfeoe.data.repository.DocumentoRepository
+import com.example.programaficharfeoe.data.repository.NominasRepository
 import kotlinx.coroutines.launch
 
 class NominasViewModel : ViewModel() {
 
-    private val repository = DocumentoRepository()
+    private val repository = NominasRepository()
 
-    var nominas by mutableStateOf<List<Documento>>(emptyList())
+    var nominas = mutableStateOf<List<Documento>>(emptyList())
         private set
 
-    var isLoading by mutableStateOf(false)
+    var isLoading = mutableStateOf(false)
         private set
 
-    var error by mutableStateOf<String?>(null)
+    var error = mutableStateOf<String?>(null)
         private set
 
     fun cargarNominas() {
-
         viewModelScope.launch {
-            isLoading = true
-            error = null
+            isLoading.value = true
+            error.value = null
 
             try {
-                nominas = repository.getNominas()  ?: emptyList()
+                val result = repository.getNominas()
+
+                if (result != null) {
+                    nominas.value = result
+                } else {
+                    error.value = "Error al cargar nóminas"
+                }
+
             } catch (e: Exception) {
-                error = "Error al cargar nóminas"
+                error.value = e.message
             }
 
-            isLoading = false
+            isLoading.value = false
         }
     }
 }
