@@ -2,8 +2,6 @@ package com.example.programaficharfeoe.ui.screens.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,154 +9,98 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun HomeScreen(
-    onGoToFichaje: () -> Unit,
-    onGoToVacaciones: () -> Unit,
-    onGoToNominas: () -> Unit,
-    onGoToFaltas: () -> Unit,
-    onGoToReconocimientos: () -> Unit,
-    onGoToFormacion: () -> Unit,
-    onGoToEpis: () -> Unit,
+    onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
 
-        Text(
-            text = "Bienvenido",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Bienvenido",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Text("Panel de empleado")
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Panel de empleado",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        DashboardCard(
-            title = "Fichaje QR",
-            description = "Registrar entrada/salida",
-            onClick = onGoToFichaje
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "Vacaciones",
-            description = "Solicitar días libres",
-            onClick = onGoToVacaciones
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "Nóminas",
-            description = "Consultar recibos",
-            onClick = onGoToNominas
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "Faltas",
-            description = "Consultar ausencias",
-            onClick = onGoToFaltas
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "Reconocimientos",
-            description = "Control médico laboral",
-            onClick = onGoToReconocimientos
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "Formación",
-            description = "Cursos y diplomas",
-            onClick = onGoToFormacion
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        DashboardCard(
-            title = "EPIs",
-            description = "Equipos de protección",
-            onClick = onGoToEpis
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        LogoutCard(onLogout)
+            TextButton(onClick = onLogout) {
+                Text("Cerrar sesión")
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
-    }
-}
 
-@Composable
-fun DashboardCard(
-    title: String,
-    description: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge
-            )
+        MenuCard("Fichaje QR", "Registrar entrada/salida") {
+            onNavigate("fichaje")
+        }
 
-            Spacer(modifier = Modifier.height(6.dp))
+        MenuCard("Vacaciones", "Solicitar días libres") {
+            onNavigate("vacaciones")
+        }
 
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium
-            )
+        MenuCard("Nóminas", "Consultar recibos") {
+            onNavigate("nominas")
+        }
+
+        MenuCard("Faltas", "Consultar ausencias") {
+            onNavigate("faltas")
+        }
+
+        MenuCard("Reconocimientos", "Control médico laboral") {
+            onNavigate("reconocimientos")
+        }
+
+        MenuCard("Formación", "Cursos y diplomas") {
+            onNavigate("formacion")
+        }
+
+        MenuCard("EPIs", "Equipos de protección") {
+            onNavigate("epis")
         }
     }
 }
 
 @Composable
-fun LogoutCard(onLogout: () -> Unit) {
+fun MenuCard(
+    titulo: String,
+    descripcion: String,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onLogout() },
+            .padding(vertical = 6.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(6.dp)
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
+
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
+
             Text(
-                text = "Cerrar sesión",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                text = titulo,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Salir de la aplicación",
-                color = MaterialTheme.colorScheme.onErrorContainer
+                text = descripcion,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

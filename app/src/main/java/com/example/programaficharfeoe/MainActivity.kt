@@ -8,10 +8,14 @@ import androidx.activity.compose.setContent
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.data.repository.FichajeRepository
 import com.example.programaficharfeoe.ui.navigation.AppNavigation
+import com.example.programaficharfeoe.ui.theme.ProgramaFicharFEOETheme
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.SideEffect
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.example.programaficharfeoe.ui.theme.AzulHidrocaex
 
 class MainActivity : ComponentActivity() {
 
@@ -20,16 +24,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializar SessionManager
+        // Inicializar sesión
         SessionManager.init(this)
 
         setContent {
-            AppNavigation(
-                onScanQR = { tipo ->
-                    tipoActual = tipo
-                    iniciarEscaneoQR()
+            ProgramaFicharFEOETheme {
+
+                val systemUiController = rememberSystemUiController()
+
+                SideEffect {
+                    systemUiController.setStatusBarColor(
+                        color = AzulHidrocaex
+                    )
                 }
-            )
+
+                AppNavigation(
+                    onScanQR = { tipo ->
+                        tipoActual = tipo
+                        iniciarEscaneoQR()
+                    }
+                )
+            }
         }
     }
 
@@ -42,7 +57,9 @@ class MainActivity : ComponentActivity() {
         integrator.initiateScan()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
 
         if (result != null) {

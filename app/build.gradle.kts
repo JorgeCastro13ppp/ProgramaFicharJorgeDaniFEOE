@@ -88,4 +88,6 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
 }

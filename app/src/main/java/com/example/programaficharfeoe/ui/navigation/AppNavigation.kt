@@ -3,13 +3,13 @@ package com.example.programaficharfeoe.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
-import com.example.programaficharfeoe.ui.screens.login.LoginScreen
-import com.example.programaficharfeoe.ui.screens.home.HomeScreen
-import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
-import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
-import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
-import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.ui.screens.home.HomeScreen
+import com.example.programaficharfeoe.ui.screens.login.LoginScreen
+import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
+import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
+import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
+import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
 
 @Composable
 fun AppNavigation(
@@ -44,15 +44,12 @@ fun AppNavigation(
         // HOME
         composable("home") {
             HomeScreen(
-                onGoToFichaje = { navController.navigate("fichaje") },
-                onGoToVacaciones = { navController.navigate("vacaciones") },
-                onGoToNominas = { navController.navigate("nominas") },
-                onGoToFaltas = { navController.navigate("faltas") },
-                onGoToReconocimientos = { navController.navigate("reconocimientos") },
-                onGoToFormacion = { navController.navigate("formacion") },
-                onGoToEpis = { navController.navigate("epis") },
+                onNavigate = { ruta ->
+                    navController.navigate(ruta)
+                },
                 onLogout = {
                     SessionManager.clearSession()
+
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
@@ -60,42 +57,16 @@ fun AppNavigation(
             )
         }
 
-        // FICHAJE QR
+        // FICHAJE
         composable("fichaje") {
             FichajeScreen(
-                onScanQR = { tipo ->
-                    onScanQR(tipo)
-                }
+                onScanQR = onScanQR
             )
         }
 
-        // DOCUMENTOS
-        composable("nominas") {
-            DocumentosScreen(
-                tipo = "nomina",
-                titulo = "Nóminas"
-            )
-        }
-
-        composable("reconocimientos") {
-            DocumentosScreen(
-                tipo = "reconocimiento",
-                titulo = "Reconocimientos"
-            )
-        }
-
-        composable("formacion") {
-            DocumentosScreen(
-                tipo = "formacion",
-                titulo = "Formación"
-            )
-        }
-
-        composable("epis") {
-            DocumentosScreen(
-                tipo = "epi",
-                titulo = "EPIs"
-            )
+        // VACACIONES
+        composable("vacaciones") {
+            VacacionesScreen()
         }
 
         // FALTAS
@@ -103,9 +74,21 @@ fun AppNavigation(
             FaltasScreen()
         }
 
-        // VACACIONES
-        composable("vacaciones") {
-            VacacionesScreen()
+        // DOCUMENTOS
+        composable("nominas") {
+            DocumentosScreen("Nóminas", "nomina")
+        }
+
+        composable("epis") {
+            DocumentosScreen("EPIs", "epi")
+        }
+
+        composable("formacion") {
+            DocumentosScreen("Formación", "formacion")
+        }
+
+        composable("reconocimientos") {
+            DocumentosScreen("Reconocimientos", "reconocimiento")
         }
     }
 }
