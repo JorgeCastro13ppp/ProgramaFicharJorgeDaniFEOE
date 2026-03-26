@@ -1,36 +1,26 @@
 package com.example.programaficharfeoe.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
+import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
+import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
 import com.example.programaficharfeoe.ui.screens.home.HomeScreen
 import com.example.programaficharfeoe.ui.screens.login.LoginScreen
-import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
 import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
-import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
-import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
 
 @Composable
-fun AppNavigation(
-    onScanQR: (String) -> Unit
-) {
+fun AppNavigation() {
 
     val navController = rememberNavController()
-    val context = LocalContext.current
-
-    // Inicializar sesión
-    SessionManager.init(context)
-
-    val startDestination =
-        if (SessionManager.getToken() != null) "home" else "login"
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = if (SessionManager.getToken() != null) "home" else "login"
     ) {
 
-        // LOGIN
+        // 🔐 LOGIN
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -41,7 +31,7 @@ fun AppNavigation(
             )
         }
 
-        // HOME
+        // 🏠 HOME
         composable("home") {
             HomeScreen(
                 onNavigate = { ruta ->
@@ -49,7 +39,6 @@ fun AppNavigation(
                 },
                 onLogout = {
                     SessionManager.clearSession()
-
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
@@ -57,38 +46,36 @@ fun AppNavigation(
             )
         }
 
-        // FICHAJE
+        // 📷 FICHAJE (🔥 NUEVO SISTEMA)
         composable("fichaje") {
-            FichajeScreen(
-                onScanQR = onScanQR
-            )
+            FichajeScreen(navController = navController)
         }
 
-        // VACACIONES
+        // 🌴 VACACIONES
         composable("vacaciones") {
             VacacionesScreen()
         }
 
-        // FALTAS
-        composable("faltas") {
-            FaltasScreen()
-        }
-
-        // DOCUMENTOS
+        // 📄 DOCUMENTOS (NÓMINAS, EPIS, ETC)
         composable("nominas") {
             DocumentosScreen("Nóminas", "nomina")
         }
 
-        composable("epis") {
-            DocumentosScreen("EPIs", "epi")
+        composable("reconocimientos") {
+            DocumentosScreen("Reconocimientos", "reconocimiento")
         }
 
         composable("formacion") {
             DocumentosScreen("Formación", "formacion")
         }
 
-        composable("reconocimientos") {
-            DocumentosScreen("Reconocimientos", "reconocimiento")
+        composable("epis") {
+            DocumentosScreen("EPIs", "epi")
+        }
+
+        // ❌ FALTAS
+        composable("faltas") {
+            FaltasScreen()
         }
     }
 }

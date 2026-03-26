@@ -4,14 +4,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.programaficharfeoe.data.local.SessionManager
 
 @Composable
 fun HomeScreen(
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit
 ) {
+
+    val username = SessionManager.getUsername() ?: "Usuario"
 
     Column(
         modifier = Modifier
@@ -21,22 +25,32 @@ fun HomeScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+
             Column {
                 Text(
                     text = "Bienvenido",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Text(
+                    text = username,
                     style = MaterialTheme.typography.headlineMedium
                 )
-                Text("Panel de empleado")
             }
 
-            TextButton(onClick = onLogout) {
-                Text("Cerrar sesión")
-            }
+            Text(
+                text = "Cerrar sesión",
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable {
+                    onLogout()
+                }
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         MenuCard("Fichaje QR", "Registrar entrada/salida") {
             onNavigate("fichaje")

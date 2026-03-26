@@ -6,44 +6,46 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.repository.FichajeRepository
 import kotlinx.coroutines.launch
 
-class FichajeViewModel(
-    private val repository: FichajeRepository = FichajeRepository()
-) : ViewModel() {
+class FichajeViewModel : ViewModel() {
 
-    var tipoDisponible by mutableStateOf<String?>(null)
-    var mensaje by mutableStateOf<String?>(null)
+    private val repository = FichajeRepository()
+
+    var tipoActual by mutableStateOf("entrada")
+        private set
+
+    var isLoading by mutableStateOf(true)
+        private set
 
     init {
-        cargarTipoDisponible()
+        obtenerTipoAutomatico()
     }
 
-    fun cargarTipoDisponible() {
+    private fun obtenerTipoAutomatico() {
         viewModelScope.launch {
+            isLoading = true
+
             val ultimo = repository.obtenerUltimoFichaje()
 
-            tipoDisponible = when (ultimo) {
-                "entrada" -> "salida"
-                "salida" -> "entrada"
-                else -> "entrada"
+            tipoActual = if (ultimo == "entrada") {
+                "salida"
+            } else {
+                "entrada"
             }
+
+            isLoading = false
         }
     }
 
-    fun fichar(token: String, tipo: String) {
+    fun fichar(qr: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-
-            val ok = repository.fichar(token, tipo)
+            val ok = repository.fichar(qr, tipoActual)
 
             if (ok) {
-                mensaje = "Fichaje de $tipo realizado correctamente"
-                cargarTipoDisponible()
-            } else {
-                mensaje = "Error al fichar"
+                // 🔥 actualizar tipo después de fichar
+                tipoActual = if (tipoActual == "entrada") "salida" else "entrada"
             }
-        }
-    }
 
-    fun resetMensaje() {
-        mensaje = null
+            onResult(ok)
+        }
     }
 }

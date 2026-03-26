@@ -38,12 +38,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                AppNavigation(
-                    onScanQR = { tipo ->
-                        tipoActual = tipo
-                        iniciarEscaneoQR()
-                    }
-                )
+                AppNavigation()
             }
         }
     }
