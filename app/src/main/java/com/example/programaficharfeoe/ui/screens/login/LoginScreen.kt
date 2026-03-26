@@ -106,8 +106,8 @@ fun LoginScreen(
                         onClick = { viewModel.login() },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp), // 🔥 altura más profesional
-                        shape = RoundedCornerShape(12.dp) // 🔥 clave: esquinas redondeadas pero no circulares
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Entrar")
                     }

@@ -40,7 +40,6 @@ fun FichajeScreen(
     var mostrarExito by remember { mutableStateOf(false) }
     var navegarHome by remember { mutableStateOf(false) }
 
-    // 🔥 Navegación controlada (sin errores)
     LaunchedEffect(navegarHome) {
         if (navegarHome) {
             delay(1000)
@@ -52,7 +51,7 @@ fun FichajeScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // 🔹 TÍTULO
+        // TÍTULO
         Text(
             text = if (tipo == "entrada") "Fichar entrada" else "Fichar salida",
             style = MaterialTheme.typography.headlineMedium,
@@ -70,7 +69,7 @@ fun FichajeScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
 
-                // 📷 CÁMARA
+                // CÁMARA
                 QRScanner(
                     modifier = Modifier.fillMaxSize(),
                     onQrDetected = { qr ->
@@ -79,7 +78,7 @@ fun FichajeScreen(
 
                             if (ok) {
 
-                                // 📳 VIBRACIÓN COMPATIBLE
+                                // VIBRACIÓN
                                 val vibrator =
                                     context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
@@ -102,7 +101,7 @@ fun FichajeScreen(
                     }
                 )
 
-                // 🎨 OVERLAY DE ÉXITO (SIN ERRORES)
+                // OVERLAY DE ÉXITO
                 if (mostrarExito) {
                     Box(
                         modifier = Modifier
@@ -111,7 +110,7 @@ fun FichajeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "✔ Fichaje correcto",
+                            text = "Fichaje correcto",
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium
                         )

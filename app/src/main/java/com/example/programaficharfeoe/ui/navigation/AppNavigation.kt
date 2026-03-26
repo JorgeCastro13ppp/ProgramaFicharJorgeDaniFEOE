@@ -31,7 +31,7 @@ fun AppNavigation() {
             )
         }
 
-        // 🏠 HOME
+        // HOME
         composable("home") {
             HomeScreen(
                 onNavigate = { ruta ->
@@ -46,17 +46,17 @@ fun AppNavigation() {
             )
         }
 
-        // 📷 FICHAJE (🔥 NUEVO SISTEMA)
+        // FICHAJE
         composable("fichaje") {
             FichajeScreen(navController = navController)
         }
 
-        // 🌴 VACACIONES
+        // VACACIONES
         composable("vacaciones") {
             VacacionesScreen()
         }
 
-        // 📄 DOCUMENTOS (NÓMINAS, EPIS, ETC)
+        // DOCUMENTOS (NÓMINAS, EPIS, ETC)
         composable("nominas") {
             DocumentosScreen("Nóminas", "nomina")
         }
@@ -73,7 +73,7 @@ fun AppNavigation() {
             DocumentosScreen("EPIs", "epi")
         }
 
-        // ❌ FALTAS
+        // FALTAS
         composable("faltas") {
             FaltasScreen()
         }
