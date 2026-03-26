@@ -30,7 +30,7 @@ fun AppNavigation(
         startDestination = startDestination
     ) {
 
-        // 🔐 LOGIN
+        // LOGIN
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -41,7 +41,7 @@ fun AppNavigation(
             )
         }
 
-        // 🏠 HOME
+        // HOME
         composable("home") {
             HomeScreen(
                 onGoToFichaje = { navController.navigate("fichaje") },
@@ -60,7 +60,7 @@ fun AppNavigation(
             )
         }
 
-        // 📷 FICHAJE QR
+        // FICHAJE QR
         composable("fichaje") {
             FichajeScreen(
                 onScanQR = { tipo ->
@@ -69,7 +69,7 @@ fun AppNavigation(
             )
         }
 
-        // 📄 DOCUMENTOS (GENÉRICO)
+        // DOCUMENTOS
         composable("nominas") {
             DocumentosScreen(
                 tipo = "nomina",
@@ -98,12 +98,12 @@ fun AppNavigation(
             )
         }
 
-        // 📉 FALTAS
+        // FALTAS
         composable("faltas") {
             FaltasScreen()
         }
 
-        // 🌴 VACACIONES
+        // VACACIONES
         composable("vacaciones") {
             VacacionesScreen()
         }

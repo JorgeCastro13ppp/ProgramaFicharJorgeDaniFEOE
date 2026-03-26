@@ -30,7 +30,7 @@ fun VacacionesScreen(
         viewModel.cargarVacaciones()
     }
 
-    // 🔹 VALIDACIÓN
+    // VALIDACIÓN
     fun validarFechas(inicio: String, fin: String): String? {
 
         if (inicio.isBlank() || fin.isBlank()) {
@@ -122,7 +122,7 @@ fun VacacionesScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 🔹 ERROR VALIDACIÓN
+        // ERROR VALIDACIÓN
         errorFechas?.let {
             Text(
                 text = it,
@@ -130,7 +130,7 @@ fun VacacionesScreen(
             )
         }
 
-        // 🔹 RESPUESTA BACKEND
+        // RESPUESTA BACKEND
         if (solicitudOk) {
             Text("Solicitud enviada correctamente")
         }
@@ -141,7 +141,7 @@ fun VacacionesScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 LISTADO
+        // LISTADO
         when {
             isLoading -> {
                 Text("Cargando...")

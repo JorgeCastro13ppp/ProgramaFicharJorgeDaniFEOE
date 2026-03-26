@@ -54,7 +54,7 @@ fun DocumentosScreen(
 
             else -> {
                 LazyColumn {
-                    items(docs) { doc ->   // ✅ AQUÍ ESTABA EL ERROR
+                    items(docs) { doc ->
 
                         Card(
                             modifier = Modifier
@@ -89,7 +89,7 @@ fun DocumentosScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 Text(
-                                    text = doc.nombre,   // ✅ YA FUNCIONA
+                                    text = doc.nombre,
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
