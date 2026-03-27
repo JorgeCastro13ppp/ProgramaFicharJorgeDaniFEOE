@@ -38,8 +38,10 @@ fun FichajeScreen(
     val isLoading = viewModel.isLoading
 
     var mostrarExito by remember { mutableStateOf(false) }
+    var errorMensaje by remember { mutableStateOf<String?>(null) }
     var navegarHome by remember { mutableStateOf(false) }
 
+    // 🔥 Navegación controlada
     LaunchedEffect(navegarHome) {
         if (navegarHome) {
             delay(1000)
@@ -51,7 +53,6 @@ fun FichajeScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // TÍTULO
         Text(
             text = if (tipo == "entrada") "Fichar entrada" else "Fichar salida",
             style = MaterialTheme.typography.headlineMedium,
@@ -69,7 +70,7 @@ fun FichajeScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
 
-                // CÁMARA
+                // 📷 CÁMARA
                 QRScanner(
                     modifier = Modifier.fillMaxSize(),
                     onQrDetected = { qr ->
@@ -78,7 +79,7 @@ fun FichajeScreen(
 
                             if (ok) {
 
-                                // VIBRACIÓN
+                                // Vibración
                                 val vibrator =
                                     context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
@@ -96,12 +97,17 @@ fun FichajeScreen(
 
                                 mostrarExito = true
                                 navegarHome = true
+
+                            } else {
+
+                                errorMensaje = "QR no válido"
+                                navegarHome = true
                             }
                         }
                     }
                 )
 
-                // OVERLAY DE ÉXITO
+                // ÉXITO
                 if (mostrarExito) {
                     Box(
                         modifier = Modifier
@@ -110,7 +116,23 @@ fun FichajeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Fichaje correcto",
+                            text = "✔ Fichaje correcto",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+                }
+
+                // ERROR
+                if (errorMensaje != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xAAFF0000)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = errorMensaje!!,
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium
                         )
