@@ -11,7 +11,7 @@ class VacacionesViewModel : ViewModel() {
 
     private val repository = VacacionesRepository()
 
-    // 🔹 LISTADO
+    // LISTADO
     var vacaciones = mutableStateOf<List<Vacacion>>(emptyList())
         private set
 
@@ -21,14 +21,14 @@ class VacacionesViewModel : ViewModel() {
     var error = mutableStateOf<String?>(null)
         private set
 
-    // 🔹 SOLICITUD
+    // SOLICITUD
     var solicitudOk = mutableStateOf(false)
         private set
 
     var errorSolicitud = mutableStateOf<String?>(null)
         private set
 
-    // 🔹 CARGAR VACACIONES
+    // CARGAR VACACIONES
     fun cargarVacaciones() {
         viewModelScope.launch {
             isLoading.value = true
@@ -51,7 +51,7 @@ class VacacionesViewModel : ViewModel() {
         }
     }
 
-    // 🔹 SOLICITAR VACACIONES
+    // SOLICITAR VACACIONES
     fun solicitarVacaciones(fechaInicio: String, fechaFin: String) {
         viewModelScope.launch {
 

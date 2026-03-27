@@ -32,7 +32,7 @@ fun LoginScreen(
         }
     }
 
-    // 🔵 Fondo azul degradado
+    // Fondo azul degradado
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +55,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(80.dp))
 
-            // 🔵 LOGO GRANDE
+            // LOGO GRANDE
             Image(
                 painter = painterResource(id = R.drawable.logoplantilla),
                 contentDescription = "Logo empresa",
@@ -64,7 +64,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ⚪ TARJETA LOGIN
+            // TARJETA LOGIN
             Card(
                 shape = RoundedCornerShape(20.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),

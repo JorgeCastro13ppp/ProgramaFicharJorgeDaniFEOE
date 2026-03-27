@@ -37,8 +37,4 @@ class LoginViewModel(
             }
         }
     }
-
-    fun resetLoginState() {
-        loginResult = null
-    }
 }

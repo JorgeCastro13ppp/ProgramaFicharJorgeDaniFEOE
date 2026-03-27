@@ -20,7 +20,7 @@ fun AppNavigation() {
         startDestination = if (SessionManager.getToken() != null) "home" else "login"
     ) {
 
-        // 🔐 LOGIN
+        // LOGIN
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {

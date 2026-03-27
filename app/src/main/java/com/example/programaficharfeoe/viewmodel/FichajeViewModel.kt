@@ -41,7 +41,7 @@ class FichajeViewModel : ViewModel() {
             val ok = repository.fichar(qr, tipoActual)
 
             if (ok) {
-                // 🔥 actualizar tipo después de fichar
+                // actualizar tipo después de fichar
                 tipoActual = if (tipoActual == "entrada") "salida" else "entrada"
             }
 

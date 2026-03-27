@@ -43,15 +43,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun iniciarEscaneoQR() {
-        val integrator = IntentIntegrator(this)
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-        integrator.setPrompt("Escanea el código QR")
-        integrator.setBeepEnabled(true)
-        integrator.setOrientationLocked(true)
-        integrator.initiateScan()
-    }
-
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 

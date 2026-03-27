@@ -41,7 +41,7 @@ fun FichajeScreen(
     var errorMensaje by remember { mutableStateOf<String?>(null) }
     var navegarHome by remember { mutableStateOf(false) }
 
-    // 🔥 Navegación controlada
+    // Navegación controlada
     LaunchedEffect(navegarHome) {
         if (navegarHome) {
             delay(1000)
@@ -70,7 +70,7 @@ fun FichajeScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
 
-                // 📷 CÁMARA
+                // CÁMARA
                 QRScanner(
                     modifier = Modifier.fillMaxSize(),
                     onQrDetected = { qr ->

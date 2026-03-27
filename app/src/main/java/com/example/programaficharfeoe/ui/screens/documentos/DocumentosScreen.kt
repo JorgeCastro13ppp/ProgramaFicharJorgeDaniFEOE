@@ -76,7 +76,7 @@ fun DocumentosScreen(
                             doc = doc,
                             onClick = {
                                 val urlCompleta =
-                                    "http://192.168.1.171:8080${doc.url}"
+                                    "http://192.168.1.189:8080/${doc.url}"
 
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
                                     data = Uri.parse(urlCompleta)

@@ -8,16 +8,6 @@ class DocumentoRepository {
 
     private val api = RetrofitClient.instance.create(ApiService::class.java)
 
-    suspend fun getEpis(): List<Documento>? {
-        val response = api.getDocumentos("epi")
-        return if (response.isSuccessful) response.body() else null
-    }
-
-    suspend fun getNominas(): List<Documento>? {
-        val response = api.getDocumentos("nomina")
-        return if (response.isSuccessful) response.body() else null
-    }
-
     suspend fun getDocumentos(tipo: String): List<Documento>? {
         val response = api.getDocumentos(tipo)
         return if (response.isSuccessful) response.body() else null
