@@ -70,7 +70,7 @@ fun AppNavigation() {
         }
 
         composable("epis") {
-            DocumentosScreen("EPIs", "epi")
+            DocumentosScreen("EPIs", "epis")
         }
 
         // FALTAS
