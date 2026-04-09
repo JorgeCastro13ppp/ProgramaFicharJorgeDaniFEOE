@@ -7,7 +7,7 @@ import com.example.programaficharfeoe.data.remote.RetrofitClient
 
 class VacacionesRepository {
 
-    private val api = RetrofitClient.instance.create(ApiService::class.java)
+    private val api = RetrofitClient.api
 
     // 🔹 Obtener vacaciones
     suspend fun getVacaciones(): List<Vacacion>? {

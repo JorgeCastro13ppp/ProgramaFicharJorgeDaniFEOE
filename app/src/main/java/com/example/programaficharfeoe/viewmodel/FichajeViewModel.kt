@@ -1,51 +1,62 @@
 package com.example.programaficharfeoe.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.programaficharfeoe.data.location.LocationService
+import com.example.programaficharfeoe.data.model.FichajeEventoRequest
 import com.example.programaficharfeoe.data.repository.FichajeRepository
 import kotlinx.coroutines.launch
 
 class FichajeViewModel : ViewModel() {
 
-    private val repository = FichajeRepository()
+    private val repo = FichajeRepository()
 
-    var tipoActual by mutableStateOf("entrada")
-        private set
+    var loading by mutableStateOf(false)
+    var mensaje by mutableStateOf<String?>(null)
 
-    var isLoading by mutableStateOf(true)
-        private set
+    fun fichar(
+        context: Context,
+        userId: Int,
+        contexto: String,
+        accion: String
+    ) {
 
-    init {
-        obtenerTipoAutomatico()
-    }
-
-    private fun obtenerTipoAutomatico() {
         viewModelScope.launch {
-            isLoading = true
 
-            val ultimo = repository.obtenerUltimoFichaje()
+            loading = true
 
-            tipoActual = if (ultimo == "entrada") {
-                "salida"
-            } else {
-                "entrada"
-            }
+            val locationService = LocationService(context)
+            val location = locationService.getLastLocation()
 
-            isLoading = false
-        }
-    }
+            val lat = location?.first ?: 0.0
+            val lng = location?.second ?: 0.0
+            val accuracy = location?.third ?: 0.0
 
-    fun fichar(qr: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val ok = repository.fichar(qr, tipoActual)
+            val request = FichajeEventoRequest(
+                userId = userId,
+                timestamp = System.currentTimeMillis(),
+                contexto = contexto,
+                accion = accion,
+                latitud = lat,
+                longitud = lng,
+                accuracy = accuracy
+            )
 
-            if (ok) {
-                // actualizar tipo después de fichar
-                tipoActual = if (tipoActual == "entrada") "salida" else "entrada"
-            }
+            val result = repo.fichar(request)
 
-            onResult(ok)
+            loading = false
+
+            result
+                .onSuccess {
+                    mensaje = it
+                    println("SUCCESS FICHAJE: $it")
+                }
+                .onFailure {
+                    mensaje = it.message
+                    println("ERROR FICHAJE: ${it.message}")
+                }
         }
     }
 }

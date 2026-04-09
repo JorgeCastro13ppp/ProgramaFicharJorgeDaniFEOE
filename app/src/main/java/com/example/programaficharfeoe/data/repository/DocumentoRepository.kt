@@ -6,7 +6,7 @@ import com.example.programaficharfeoe.data.remote.RetrofitClient
 
 class DocumentoRepository {
 
-    private val api = RetrofitClient.instance.create(ApiService::class.java)
+    private val api = RetrofitClient.api
 
     suspend fun getDocumentos(tipo: String): List<Documento>? {
         val response = api.getDocumentos(tipo)

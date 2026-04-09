@@ -1,31 +1,26 @@
 package com.example.programaficharfeoe.data.repository
 
 import com.example.programaficharfeoe.data.model.Fichaje
+import com.example.programaficharfeoe.data.model.FichajeEventoRequest
 import com.example.programaficharfeoe.data.model.FichajeRequest
 import com.example.programaficharfeoe.data.remote.ApiService
 import com.example.programaficharfeoe.data.remote.RetrofitClient
 
 class FichajeRepository {
 
-    private val api = RetrofitClient.instance.create(ApiService::class.java)
+    suspend fun fichar(request: FichajeEventoRequest): Result<String> {
+        return try {
+            val response = RetrofitClient.api.fichar(request)
 
-    suspend fun fichar(token: String, tipo: String): Boolean {
-        val response = api.fichar(
-            FichajeRequest(
-                token = token,
-                tipo = tipo
-            )
-        )
-        return response.isSuccessful
-    }
+            if (response.isSuccessful) {
+                Result.success(response.body()?.message ?: "OK")
+            } else {
+                val error = response.errorBody()?.string() ?: "Error"
+                Result.failure(Exception(error))
+            }
 
-    suspend fun obtenerFichajes(): List<Fichaje>? {
-        val response = api.getFichajes()
-        return if (response.isSuccessful) response.body() else null
-    }
-
-    suspend fun obtenerUltimoFichaje(): String? {
-        val lista = obtenerFichajes()
-        return lista?.lastOrNull()?.tipo
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

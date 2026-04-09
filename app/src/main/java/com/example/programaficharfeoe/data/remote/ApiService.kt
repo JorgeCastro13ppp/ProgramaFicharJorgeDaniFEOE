@@ -34,4 +34,9 @@ interface ApiService {
 
     @GET("fichajes")
     suspend fun getFichajes(): Response<List<Fichaje>>
+
+    @POST("fichajes-eventos")
+    suspend fun fichar(
+        @Body request: FichajeEventoRequest
+    ): Response<FichajeEventoResponse>
 }

@@ -52,7 +52,7 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        MenuCard("Fichaje QR", "Registrar entrada/salida") {
+        MenuCard("Fichaje", "Registrar entrada/salida") {
             onNavigate("fichaje")
         }
 

@@ -48,7 +48,11 @@ fun AppNavigation() {
 
         // FICHAJE
         composable("fichaje") {
-            FichajeScreen(navController = navController)
+            FichajeScreen(
+                onSuccess = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         // VACACIONES

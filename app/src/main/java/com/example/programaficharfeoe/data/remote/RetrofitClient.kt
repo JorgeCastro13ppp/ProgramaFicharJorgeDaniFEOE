@@ -32,9 +32,11 @@ object RetrofitClient {
         .addInterceptor(authInterceptor)
         .build()
 
-    val instance: Retrofit = Retrofit.Builder()
+    private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
+
+    val api: ApiService = retrofit.create(ApiService::class.java)
 }

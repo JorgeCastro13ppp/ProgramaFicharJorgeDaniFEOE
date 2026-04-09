@@ -1,231 +1,203 @@
 package com.example.programaficharfeoe.ui.screens.fichaje
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.util.Log
-import androidx.camera.core.*
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
-import java.util.concurrent.Executors
 
 @Composable
 fun FichajeScreen(
-    navController: NavController,
-    viewModel: FichajeViewModel = viewModel()
+    onSuccess: () -> Unit
 ) {
-    val context = LocalContext.current
-    val tipo = viewModel.tipoActual
-    val isLoading = viewModel.isLoading
 
+    val context = LocalContext.current
+    val viewModel: FichajeViewModel = viewModel()
+
+    var contexto by remember { mutableStateOf("TALLER") }
     var mostrarExito by remember { mutableStateOf(false) }
-    var errorMensaje by remember { mutableStateOf<String?>(null) }
-    var navegarHome by remember { mutableStateOf(false) }
 
-    // Navegación controlada
-    LaunchedEffect(navegarHome) {
-        if (navegarHome) {
-            delay(1000)
-            navController.navigate("home") {
-                popUpTo("fichaje") { inclusive = true }
-            }
-        }
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-
-        Text(
-            text = if (tipo == "entrada") "Fichar entrada" else "Fichar salida",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-
-            Box(modifier = Modifier.fillMaxSize()) {
-
-                // CÁMARA
-                QRScanner(
-                    modifier = Modifier.fillMaxSize(),
-                    onQrDetected = { qr ->
-
-                        viewModel.fichar(qr) { ok ->
-
-                            if (ok) {
-
-                                // Vibración
-                                val vibrator =
-                                    context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    vibrator.vibrate(
-                                        VibrationEffect.createOneShot(
-                                            200,
-                                            VibrationEffect.DEFAULT_AMPLITUDE
-                                        )
-                                    )
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    vibrator.vibrate(200)
-                                }
-
-                                mostrarExito = true
-                                navegarHome = true
-
-                            } else {
-
-                                errorMensaje = "QR no válido"
-                                navegarHome = true
-                            }
-                        }
-                    }
-                )
-
-                // ÉXITO
-                if (mostrarExito) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xAA4CAF50)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "✔ Fichaje correcto",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                    }
-                }
-
-                // ERROR
-                if (errorMensaje != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xAAFF0000)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = errorMensaje!!,
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@SuppressLint("UnsafeOptInUsageError")
-@Composable
-fun QRScanner(
-    modifier: Modifier = Modifier,
-    onQrDetected: (String) -> Unit
-) {
-    val context = LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
-    val previewView = remember { PreviewView(context) }
-    var yaDetectado by remember { mutableStateOf(false) }
-
-    AndroidView(
-        factory = { previewView },
-        modifier = modifier
-    )
+    // Permiso ubicación (solo pedir, no gestionar aquí)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     LaunchedEffect(Unit) {
+        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
 
-        cameraProviderFuture.addListener({
+        Text(
+            text = "Fichaje",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
-            val cameraProvider = cameraProviderFuture.get()
+        Spacer(modifier = Modifier.height(16.dp))
 
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
+        // CONTEXTO
+        Text("Selecciona contexto")
 
-            val scanner = BarcodeScanning.getClient()
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            listOf("TALLER", "OBRA", "REPARACION").forEach { contextoItem ->
 
-            val analysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
+                Button(
 
-            analysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-
-                if (yaDetectado) {
-                    imageProxy.close()
-                    return@setAnalyzer
-                }
-
-                val mediaImage = imageProxy.image
-                if (mediaImage != null) {
-
-                    val image = InputImage.fromMediaImage(
-                        mediaImage,
-                        imageProxy.imageInfo.rotationDegrees
+                    onClick = { contexto = contextoItem },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (contexto == contextoItem)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            Color.Gray
                     )
-
-                    scanner.process(image)
-                        .addOnSuccessListener { barcodes ->
-                            for (barcode in barcodes) {
-                                barcode.rawValue?.let {
-
-                                    if (!yaDetectado) {
-                                        yaDetectado = true
-                                        onQrDetected(it)
-                                    }
-                                }
-                            }
-                        }
-                        .addOnFailureListener {
-                            Log.e("QR", "Error escaneando", it)
-                        }
-                        .addOnCompleteListener {
-                            imageProxy.close()
-                        }
-                } else {
-                    imageProxy.close()
+                ) {
+                    Text(contextoItem)
                 }
             }
+        }
 
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        Spacer(modifier = Modifier.height(24.dp))
 
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                cameraSelector,
-                preview,
-                analysis
+        Text("Acciones")
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val acciones = listOf(
+            "ENTRADA" to "SALIDA",
+            "INICIO_VIAJE" to "FIN_VIAJE",
+            "INICIO_DESCANSO" to "FIN_DESCANSO"
+        )
+
+        acciones.forEach { (izquierda, derecha) ->
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                // IZQUIERDA
+                Button(
+                    onClick = {
+                        val userId = SessionManager.getUserId()
+
+                        viewModel.fichar(
+                            context = context,
+                            userId = userId,
+                            contexto = contexto,
+                            accion = izquierda
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(80.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(izquierda.replace("_", " "))
+                }
+
+                // DERECHA
+                Button(
+                    onClick = {
+                        val userId = SessionManager.getUserId()
+
+                        viewModel.fichar(
+                            context = context,
+                            userId = userId,
+                            contexto = contexto,
+                            accion = derecha
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(80.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(derecha.replace("_", " "))
+                }
+            }
+        }
+    }
+
+    // RESPUESTA
+    viewModel.mensaje?.let { mensaje ->
+
+        LaunchedEffect(mensaje) {
+            Toast.makeText(context, "Respuesta: $mensaje", Toast.LENGTH_LONG).show()
+
+            if (!mensaje.contains("Error", true)) {
+
+                val vibrator =
+                    context.getSystemService(Vibrator::class.java)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE)
+                    )
+                } else {
+                    vibrator.vibrate(200)
+                }
+
+                mostrarExito = true
+
+                delay(1200)
+
+                viewModel.mensaje = null
+                mostrarExito = false
+
+                onSuccess()
+
+            } else {
+                Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+                viewModel.mensaje = null
+            }
+        }
+    }
+
+    // ÉXITO
+    AnimatedVisibility(
+        visible = mostrarExito,
+        enter = fadeIn()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAA4CAF50)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "✔ Fichaje correcto",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineMedium
             )
-
-        }, ContextCompat.getMainExecutor(context))
+        }
     }
 }

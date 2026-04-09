@@ -6,7 +6,7 @@ import com.example.programaficharfeoe.data.remote.RetrofitClient
 
 class FaltasRepository {
 
-    private val api = RetrofitClient.instance.create(ApiService::class.java)
+    private val api = RetrofitClient.api
 
     suspend fun getFaltas(): List<Falta>? {
         val response = api.getFaltas()

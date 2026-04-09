@@ -19,13 +19,21 @@ object SessionManager {
         return prefs.getString("token", null)
     }
 
-    // 🔥 NUEVO
     fun saveUsername(username: String) {
         prefs.edit().putString("username", username).apply()
     }
 
     fun getUsername(): String? {
         return prefs.getString("username", null)
+    }
+
+    // 🔥 AÑADIR ESTO
+    fun saveUserId(userId: Int) {
+        prefs.edit().putInt("userId", userId).apply()
+    }
+
+    fun getUserId(): Int {
+        return prefs.getInt("userId", 0)
     }
 
     fun clearSession() {

@@ -95,4 +95,6 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.1")
     implementation("androidx.camera:camera-view:1.3.1")
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }

@@ -31,6 +31,7 @@ class LoginViewModel(
             if (response != null) {
                 SessionManager.saveToken(response.token)
                 SessionManager.saveUsername(username)
+                SessionManager.saveUserId(response.userId)
                 loginResult = "OK"
             } else {
                 loginResult = "ERROR"
