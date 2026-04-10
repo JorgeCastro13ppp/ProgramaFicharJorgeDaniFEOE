@@ -1,26 +1,36 @@
 package com.example.programaficharfeoe.data.repository
 
-import com.example.programaficharfeoe.data.model.Fichaje
-import com.example.programaficharfeoe.data.model.FichajeEventoRequest
-import com.example.programaficharfeoe.data.model.FichajeRequest
-import com.example.programaficharfeoe.data.remote.ApiService
-import com.example.programaficharfeoe.data.remote.RetrofitClient
+import com.example.programaficharfeoe.data.model.*
+import com.example.programaficharfeoe.data.remote.FichajeApiService
+import com.example.programaficharfeoe.data.remote.RetrofitInstance
+import retrofit2.http.*
+
 
 class FichajeRepository {
 
-    suspend fun fichar(request: FichajeEventoRequest): Result<String> {
+    private val api = RetrofitInstance.api
+
+    suspend fun fichar(request: FichajeEventoRequest): Result<FichajeEventoResponse> {
         return try {
-            val response = RetrofitClient.api.fichar(request)
-
-            if (response.isSuccessful) {
-                Result.success(response.body()?.message ?: "OK")
-            } else {
-                val error = response.errorBody()?.string() ?: "Error"
-                Result.failure(Exception(error))
-            }
-
+            Result.success(api.fichar(request))
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun getFichajesDelDia(userId: Int): List<FichajeResponse> {
+        return api.getFichajesDelDia(userId)
+    }
+
+    suspend fun getUltimoFichaje(userId: Int): FichajeResponse {
+        return api.getUltimoFichaje(userId)
+    }
+
+    suspend fun getEstadoActual(userId: Int): EstadoActualResponse {
+        return api.getEstadoActual(userId)
+    }
+
+    suspend fun getSiguientesAcciones(userId: Int): SiguientesAccionesResponse {
+        return api.getSiguientesAcciones(userId)
     }
 }

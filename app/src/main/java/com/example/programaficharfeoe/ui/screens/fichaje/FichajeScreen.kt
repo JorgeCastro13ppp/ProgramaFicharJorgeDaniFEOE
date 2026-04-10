@@ -1,12 +1,10 @@
 package com.example.programaficharfeoe.ui.screens.fichaje
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -17,12 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.utils.calcularTiempos
+import com.example.programaficharfeoe.utils.formatearTiempo
+import com.example.programaficharfeoe.utils.toFichaje
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
 import kotlinx.coroutines.delay
 
@@ -30,20 +27,61 @@ import kotlinx.coroutines.delay
 fun FichajeScreen(
     onSuccess: () -> Unit
 ) {
-
     val context = LocalContext.current
     val viewModel: FichajeViewModel = viewModel()
 
     var contexto by remember { mutableStateOf("TALLER") }
-    var mostrarExito by remember { mutableStateOf(false) }
+    val userId = SessionManager.getUserId()
 
-    // Permiso ubicación (solo pedir, no gestionar aquí)
+    // ⏱️ Reloj en tiempo real
+    var tiempoActual by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            tiempoActual = System.currentTimeMillis()
+        }
+    }
+
+    // 📍 Solicitar permiso de ubicación
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
 
     LaunchedEffect(Unit) {
         permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        viewModel.cargarDatos(userId)
+    }
+
+    val fichajes = viewModel.fichajesLocales
+    val cargando = viewModel.cargando
+
+    // 🔥 Cálculo de tiempos
+    val tiempos = calcularTiempos(fichajes)
+    var trabajoTotal = tiempos.trabajo
+    var viajeTotal = tiempos.viaje
+    var descansoTotal = tiempos.descanso
+
+    val ultimo = fichajes.lastOrNull()
+
+    if (ultimo != null) {
+        val diff = tiempoActual - ultimo.fecha_hora
+        when {
+            ultimo.tipo.contains("ENTRADA", true) -> trabajoTotal += diff
+            ultimo.tipo.contains("INICIO_VIAJE", true) -> viajeTotal += diff
+            ultimo.tipo.contains("INICIO_DESCANSO", true) -> descansoTotal += diff
+        }
+    }
+
+    // ⏳ Pantalla de carga
+    if (cargando) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     Column(
@@ -52,6 +90,7 @@ fun FichajeScreen(
             .padding(16.dp)
     ) {
 
+        // 🔹 Título
         Text(
             text = "Fichaje",
             style = MaterialTheme.typography.headlineMedium
@@ -59,26 +98,46 @@ fun FichajeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // CONTEXTO
+        // 🔹 Tarjeta de tiempos
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF2F5DAA))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "⏱️ Trabajo: ${formatearTiempo(trabajoTotal)}",
+                    color = Color.White
+                )
+                Text(
+                    "🚗 Viaje: ${formatearTiempo(viajeTotal)}",
+                    color = Color.White
+                )
+                Text(
+                    "☕ Descanso: ${formatearTiempo(descansoTotal)}",
+                    color = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 🔹 Selección de contexto
         Text("Selecciona contexto")
 
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
         ) {
-            listOf("TALLER", "OBRA", "REPARACION").forEach { contextoItem ->
-
+            listOf("TALLER", "OBRA", "REPARACION").forEach { item ->
                 Button(
-
-                    onClick = { contexto = contextoItem },
+                    onClick = { contexto = item },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (contexto == contextoItem)
+                        containerColor = if (contexto == item)
                             MaterialTheme.colorScheme.primary
-                        else
-                            Color.Gray
+                        else Color.Gray
                     )
                 ) {
-                    Text(contextoItem)
+                    Text(item)
                 }
             }
         }
@@ -86,7 +145,6 @@ fun FichajeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text("Acciones")
-
         Spacer(modifier = Modifier.height(8.dp))
 
         val acciones = listOf(
@@ -95,7 +153,10 @@ fun FichajeScreen(
             "INICIO_DESCANSO" to "FIN_DESCANSO"
         )
 
-        acciones.forEach { (izquierda, derecha) ->
+        acciones.forEach { (izq, der) ->
+
+            val puedeIzq = viewModel.puedeFichar(izq, contexto)
+            val puedeDer = viewModel.puedeFichar(der, contexto)
 
             Row(
                 modifier = Modifier
@@ -104,100 +165,102 @@ fun FichajeScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                // IZQUIERDA
+                // 🔹 Botón izquierdo
                 Button(
                     onClick = {
-                        val userId = SessionManager.getUserId()
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Toast.makeText(
+                                context,
+                                "Permiso de ubicación denegado",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
 
                         viewModel.fichar(
-                            context = context,
-                            userId = userId,
-                            contexto = contexto,
-                            accion = izquierda
+                            context,
+                            userId,
+                            contexto,
+                            izq
                         )
                     },
+                    enabled = puedeIzq,
                     modifier = Modifier
                         .weight(1f)
-                        .height(80.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(izquierda.replace("_", " "))
-                }
-
-                // DERECHA
-                Button(
-                    onClick = {
-                        val userId = SessionManager.getUserId()
-
-                        viewModel.fichar(
-                            context = context,
-                            userId = userId,
-                            contexto = contexto,
-                            accion = derecha
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(80.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(derecha.replace("_", " "))
-                }
-            }
-        }
-    }
-
-    // RESPUESTA
-    viewModel.mensaje?.let { mensaje ->
-
-        LaunchedEffect(mensaje) {
-            Toast.makeText(context, "Respuesta: $mensaje", Toast.LENGTH_LONG).show()
-
-            if (!mensaje.contains("Error", true)) {
-
-                val vibrator =
-                    context.getSystemService(Vibrator::class.java)
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(
-                        VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE)
+                        .height(70.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (puedeIzq)
+                            Color(0xFF4CAF50)
+                        else Color.LightGray
                     )
-                } else {
-                    vibrator.vibrate(200)
+                ) {
+                    Text(izq.replace("_", " "))
                 }
 
-                mostrarExito = true
+                // 🔹 Botón derecho
+                Button(
+                    onClick = {
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Toast.makeText(
+                                context,
+                                "Permiso de ubicación denegado",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
 
-                delay(1200)
+                        viewModel.fichar(
+                            context,
+                            userId,
+                            contexto,
+                            der
+                        )
+                    },
+                    enabled = puedeDer,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(70.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (puedeDer)
+                            Color(0xFFF44336)
+                        else Color.LightGray
+                    )
+                ) {
+                    Text(der.replace("_", " "))
+                }
+            }
+        }
 
-                viewModel.mensaje = null
-                mostrarExito = false
-
-                onSuccess()
-
-            } else {
-                Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
-                viewModel.mensaje = null
+        // 🔹 Última acción
+        viewModel.ultimaAccion?.let {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+            ) {
+                Text(
+                    text = "Última acción: $it",
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         }
     }
 
-    // ÉXITO
-    AnimatedVisibility(
-        visible = mostrarExito,
-        enter = fadeIn()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xAA4CAF50)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "✔ Fichaje correcto",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium
-            )
+    // 🔔 Mensajes
+    viewModel.mensaje?.let { mensaje ->
+        LaunchedEffect(mensaje) {
+            Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+            viewModel.mensaje = null
         }
     }
 }

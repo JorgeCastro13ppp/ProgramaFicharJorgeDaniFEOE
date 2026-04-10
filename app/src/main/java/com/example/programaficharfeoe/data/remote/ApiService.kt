@@ -33,10 +33,22 @@ interface ApiService {
     ): Response<Map<String, String>>
 
     @GET("fichajes")
-    suspend fun getFichajes(): Response<List<Fichaje>>
+    suspend fun getFichajes(
+        @Query("userId") userId: Int
+    ): Response<List<Fichaje>>
 
     @POST("fichajes-eventos")
     suspend fun fichar(
         @Body request: FichajeEventoRequest
     ): Response<FichajeEventoResponse>
+
+    @GET("fichajes-eventos/hoy/{userId}")
+    suspend fun getFichajesDelDia(
+        @Path("userId") userId: Int
+    ): Response<List<Fichaje>>
+
+    @GET("fichajes-eventos/ultimo/{userId}")
+    suspend fun getUltimoFichaje(
+        @Path("userId") userId: Int
+    ): Response<Fichaje>
 }
