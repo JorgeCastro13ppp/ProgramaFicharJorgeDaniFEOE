@@ -10,14 +10,14 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "http://192.168.1.189:8080/"
+    private const val BASE_URL = "http://192.168.1.15:8080/"
 
-    // 🔍 Interceptor para logs
+    // Interceptor para logs
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // 🔐 Interceptor para añadir el token JWT
+    // Interceptor para añadir el token JWT
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val token = SessionManager.getToken()

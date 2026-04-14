@@ -6,6 +6,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,15 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
-import com.example.programaficharfeoe.utils.calcularTiempos
-import com.example.programaficharfeoe.utils.formatearTiempo
-import com.example.programaficharfeoe.utils.toFichaje
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
-import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun FichajeScreen(
@@ -29,21 +30,14 @@ fun FichajeScreen(
 ) {
     val context = LocalContext.current
     val viewModel: FichajeViewModel = viewModel()
-
-    var contexto by remember { mutableStateOf("TALLER") }
     val userId = SessionManager.getUserId()
 
-    // ⏱️ Reloj en tiempo real
-    var tiempoActual by remember { mutableStateOf(System.currentTimeMillis()) }
+    var contexto by remember { mutableStateOf("TALLER") }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            tiempoActual = System.currentTimeMillis()
-        }
-    }
+    val fichajes = viewModel.fichajesLocales
+    val cargando = viewModel.cargando
 
-    // 📍 Solicitar permiso de ubicación
+    // Solicitar permiso de ubicación
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -53,27 +47,7 @@ fun FichajeScreen(
         viewModel.cargarDatos(userId)
     }
 
-    val fichajes = viewModel.fichajesLocales
-    val cargando = viewModel.cargando
-
-    // 🔥 Cálculo de tiempos
-    val tiempos = calcularTiempos(fichajes)
-    var trabajoTotal = tiempos.trabajo
-    var viajeTotal = tiempos.viaje
-    var descansoTotal = tiempos.descanso
-
-    val ultimo = fichajes.lastOrNull()
-
-    if (ultimo != null) {
-        val diff = tiempoActual - ultimo.fecha_hora
-        when {
-            ultimo.tipo.contains("ENTRADA", true) -> trabajoTotal += diff
-            ultimo.tipo.contains("INICIO_VIAJE", true) -> viajeTotal += diff
-            ultimo.tipo.contains("INICIO_DESCANSO", true) -> descansoTotal += diff
-        }
-    }
-
-    // ⏳ Pantalla de carga
+    // Pantalla de carga
     if (cargando) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -98,30 +72,7 @@ fun FichajeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 Tarjeta de tiempos
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF2F5DAA))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    "⏱️ Trabajo: ${formatearTiempo(trabajoTotal)}",
-                    color = Color.White
-                )
-                Text(
-                    "🚗 Viaje: ${formatearTiempo(viajeTotal)}",
-                    color = Color.White
-                )
-                Text(
-                    "☕ Descanso: ${formatearTiempo(descansoTotal)}",
-                    color = Color.White
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 🔹 Selección de contexto
+        // Selección de contexto
         Text("Selecciona contexto")
 
         Row(
@@ -144,6 +95,7 @@ fun FichajeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Acciones
         Text("Acciones")
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -155,8 +107,10 @@ fun FichajeScreen(
 
         acciones.forEach { (izq, der) ->
 
-            val puedeIzq = viewModel.puedeFichar(izq, contexto)
-            val puedeDer = viewModel.puedeFichar(der, contexto)
+            val puedeIzq =
+                !cargando && viewModel.puedeFichar(izq, contexto)
+            val puedeDer =
+                !cargando && viewModel.puedeFichar(der, contexto)
 
             Row(
                 modifier = Modifier
@@ -165,7 +119,6 @@ fun FichajeScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                // 🔹 Botón izquierdo
                 Button(
                     onClick = {
                         if (ContextCompat.checkSelfPermission(
@@ -202,7 +155,6 @@ fun FichajeScreen(
                     Text(izq.replace("_", " "))
                 }
 
-                // 🔹 Botón derecho
                 Button(
                     onClick = {
                         if (ContextCompat.checkSelfPermission(
@@ -241,26 +193,92 @@ fun FichajeScreen(
             }
         }
 
-        // 🔹 Última acción
-        viewModel.ultimaAccion?.let {
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.LightGray)
-            ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // REGISTROS DEL DÍA
+        Text(
+            text = "Registros de hoy",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        ) {
+            if (fichajes.isEmpty()) {
                 Text(
-                    text = "Última acción: $it",
-                    modifier = Modifier.padding(12.dp)
+                    text = "No hay registros hoy",
+                    modifier = Modifier.padding(16.dp)
                 )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    items(fichajes) { fichaje ->
+                        RegistroItem(
+                            tipo = fichaje.tipo,
+                            timestamp = fichaje.fecha_hora
+                        )
+                    }
+                }
             }
         }
     }
 
-    // 🔔 Mensajes
+    // Mensajes
     viewModel.mensaje?.let { mensaje ->
         LaunchedEffect(mensaje) {
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             viewModel.mensaje = null
         }
+    }
+}
+
+@Composable
+fun RegistroItem(tipo: String, timestamp: Long) {
+    val formatoHora = SimpleDateFormat("dd/MM/yy HH:mm:ss", Locale.getDefault())
+    val fechaFormateada = formatoHora.format(Date(timestamp))
+
+    // Separar acción y contexto (formato: ACCION · CONTEXTO)
+    val partes = tipo.split("·")
+
+    val accion = partes.getOrNull(0)
+        ?.trim()
+        ?.lowercase()
+        ?.replace("_", " ")
+        ?.replaceFirstChar { it.uppercase() }
+        ?: "Desconocido"
+
+    val contexto = partes.getOrNull(1)
+        ?.trim()
+        ?.lowercase()
+        ?.replaceFirstChar { it.uppercase() }
+        ?: ""
+
+    val textoFinal = if (contexto.isNotEmpty()) {
+        "$accion - $contexto"
+    } else {
+        accion
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = textoFinal,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = fechaFormateada,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.DarkGray
+        )
     }
 }
