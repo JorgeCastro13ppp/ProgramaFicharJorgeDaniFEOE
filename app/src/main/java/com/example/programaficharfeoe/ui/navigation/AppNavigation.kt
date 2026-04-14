@@ -1,8 +1,11 @@
 package com.example.programaficharfeoe.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.ui.screens.context.ContextSelectionScreen
 import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
 import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
 import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
@@ -46,12 +49,31 @@ fun AppNavigation() {
             )
         }
 
-        // FICHAJE
+        // SELECCIÓN DE CONTEXTO
+        composable("context_selection") {
+            ContextSelectionScreen(navController)
+        }
+
+        // FICHAJE (Pantalla intermedia)
         composable("fichaje") {
-            FichajeScreen(
-                onSuccess = {
-                    navController.popBackStack()
+            ContextSelectionScreen(navController)
+        }
+
+        // FICHAJE CON CONTEXTO
+        composable(
+            route = "fichaje/{contexto}",
+            arguments = listOf(
+                navArgument("contexto") {
+                    type = NavType.StringType
                 }
+            )
+        ) { backStackEntry ->
+            val contexto =
+                backStackEntry.arguments?.getString("contexto") ?: "TALLER"
+
+            FichajeScreen(
+                contextoInicial = contexto,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -60,7 +82,7 @@ fun AppNavigation() {
             VacacionesScreen()
         }
 
-        // DOCUMENTOS (NÓMINAS, EPIS, ETC)
+        // DOCUMENTOS
         composable("nominas") {
             DocumentosScreen("Nóminas", "nomina")
         }

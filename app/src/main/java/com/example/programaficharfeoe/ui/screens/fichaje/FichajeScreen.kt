@@ -26,13 +26,14 @@ import java.util.*
 
 @Composable
 fun FichajeScreen(
-    onSuccess: () -> Unit
+    contextoInicial: String,
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: FichajeViewModel = viewModel()
     val userId = SessionManager.getUserId()
 
-    var contexto by remember { mutableStateOf("TALLER") }
+    val contexto = contextoInicial.uppercase()
 
     val fichajes = viewModel.fichajesLocales
     val cargando = viewModel.cargando
@@ -72,26 +73,12 @@ fun FichajeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Selección de contexto
-        Text("Selecciona contexto")
+        // Contexto
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            listOf("TALLER", "OBRA", "REPARACION").forEach { item ->
-                Button(
-                    onClick = { contexto = item },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (contexto == item)
-                            MaterialTheme.colorScheme.primary
-                        else Color.Gray
-                    )
-                ) {
-                    Text(item)
-                }
-            }
-        }
+        Text(
+            text = "Contexto: $contexto",
+            style = MaterialTheme.typography.titleMedium
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
