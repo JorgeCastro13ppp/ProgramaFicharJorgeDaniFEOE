@@ -2,6 +2,7 @@ package com.example.programaficharfeoe.data.remote
 
 import android.util.Log
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.utils.Constants
 import okhttp3.OkHttpClient
 import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "http://192.168.1.15:8080/"
+    val baseUrl = Constants.BASE_URL
 
     // Interceptor para logs
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -43,7 +44,7 @@ object RetrofitInstance {
 
     val api: FichajeApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

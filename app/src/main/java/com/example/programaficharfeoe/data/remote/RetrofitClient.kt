@@ -1,6 +1,7 @@
 package com.example.programaficharfeoe.data.remote
 
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.utils.Constants
 import okhttp3.OkHttpClient
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -9,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://192.168.1.15:8080/"
+    val baseUrl = Constants.BASE_URL
 
     private val authInterceptor = Interceptor { chain ->
 
@@ -33,7 +34,7 @@ object RetrofitClient {
         .build()
 
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(baseUrl)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
