@@ -3,6 +3,7 @@ package com.example.programaficharfeoe.ui.screens.documentos
 import DocumentosViewModel
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +21,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.model.Documento
-import com.example.programaficharfeoe.utils.Constants
 
 @Composable
 fun DocumentosScreen(
@@ -34,9 +34,7 @@ fun DocumentosScreen(
     val isLoading by viewModel.isLoading
     val error by viewModel.error
 
-    // URL base del backend
-    val baseUrl = Constants.BASE_URL
-
+    // Cargar documentos al entrar en la pantalla
     LaunchedEffect(tipo) {
         viewModel.cargarDocumentos(tipo)
     }
@@ -46,6 +44,8 @@ fun DocumentosScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+
+        // 🔹 Título
         Text(
             text = titulo,
             style = MaterialTheme.typography.headlineMedium
@@ -54,6 +54,7 @@ fun DocumentosScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         when {
+            // Indicador de carga
             isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -63,6 +64,7 @@ fun DocumentosScreen(
                 }
             }
 
+            // Mensaje de error
             error != null -> {
                 Text(
                     text = "Error: $error",
@@ -70,31 +72,28 @@ fun DocumentosScreen(
                 )
             }
 
+            // Lista de documentos
             else -> {
                 LazyColumn {
-                    items(docs.sortedByDescending { it.id }) { doc ->
+                    items(
+                        docs.sortedByDescending { it.id }
+                    ) { doc ->
                         DocumentoItem(
                             doc = doc,
                             onClick = {
-                                // Construir la URL correctamente
-                                val urlCompleta = when {
-                                    doc.url.startsWith("http://") ||
-                                            doc.url.startsWith("https://") -> {
-                                        // La URL ya es completa
-                                        doc.url.replace("localhost", "192.168.1.15")
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        data = Uri.parse(doc.url)
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
-                                    else -> {
-                                        // La URL es relativa
-                                        "$baseUrl/${doc.url.trimStart('/')}"
-                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "No se pudo abrir el documento",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(urlCompleta)
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-
-                                context.startActivity(intent)
                             }
                         )
                     }
@@ -127,6 +126,7 @@ fun DocumentoItem(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Icon(
                 imageVector = icono,
                 contentDescription = null,
