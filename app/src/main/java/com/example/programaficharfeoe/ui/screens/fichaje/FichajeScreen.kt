@@ -65,7 +65,7 @@ fun FichajeScreen(
             .padding(16.dp)
     ) {
 
-        // 🔹 Título
+        // Título
         Text(
             text = "Fichaje",
             style = MaterialTheme.typography.headlineMedium
