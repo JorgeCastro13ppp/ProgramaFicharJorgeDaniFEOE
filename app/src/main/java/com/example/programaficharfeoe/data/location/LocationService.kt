@@ -3,56 +3,76 @@ package com.example.programaficharfeoe.data.location
 import android.annotation.SuppressLint
 import android.content.Context
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class LocationService(private val context: Context) {
+data class LocationData(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: Double
+)
+
+class LocationService(context: Context) {
+
+    private val fusedLocationClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(
+            context.applicationContext
+        )
 
     @SuppressLint("MissingPermission")
-    suspend fun getLastLocation(): Triple<Double, Double, Double>? {
+    suspend fun getLastLocation(): LocationData? {
         return suspendCancellableCoroutine { cont ->
 
-            val fusedLocationClient =
-                LocationServices.getFusedLocationProviderClient(context)
-
-            // 1. Intentar lastLocation
+            // 1. Intentar obtener la última ubicación conocida
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
-
-                    if (location != null) {
-                        cont.resume(
-                            Triple(
-                                location.latitude,
-                                location.longitude,
-                                location.accuracy.toDouble()
-                            )
-                        )
-                    } else {
-                        // 2. Si es null → pedir ubicación actual
-                        fusedLocationClient.getCurrentLocation(
-                            com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
-                            null
-                        ).addOnSuccessListener { currentLocation ->
-
-                            if (currentLocation != null) {
-                                cont.resume(
-                                    Triple(
-                                        currentLocation.latitude,
-                                        currentLocation.longitude,
-                                        currentLocation.accuracy.toDouble()
-                                    )
+                    if (cont.isActive) {
+                        if (location != null) {
+                            cont.resume(
+                                LocationData(
+                                    latitude = location.latitude,
+                                    longitude = location.longitude,
+                                    accuracy = location.accuracy.toDouble()
                                 )
-                            } else {
-                                cont.resume(null)
-                            }
-                        }.addOnFailureListener {
-                            cont.resume(null)
+                            )
+                        } else {
+                            requestCurrentLocation(cont)
                         }
                     }
                 }
                 .addOnFailureListener {
-                    cont.resume(null)
+                    if (cont.isActive) {
+                        cont.resume(null)
+                    }
                 }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestCurrentLocation(
+        cont: kotlinx.coroutines.CancellableContinuation<LocationData?>
+    ) {
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            if (cont.isActive) {
+                cont.resume(
+                    location?.let {
+                        LocationData(
+                            latitude = it.latitude,
+                            longitude = it.longitude,
+                            accuracy = it.accuracy.toDouble()
+                        )
+                    }
+                )
+            }
+        }.addOnFailureListener {
+            if (cont.isActive) {
+                cont.resume(null)
+            }
         }
     }
 }

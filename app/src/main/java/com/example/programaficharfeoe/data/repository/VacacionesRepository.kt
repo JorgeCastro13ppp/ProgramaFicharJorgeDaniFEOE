@@ -3,36 +3,21 @@ package com.example.programaficharfeoe.data.repository
 import com.example.programaficharfeoe.data.model.Vacacion
 import com.example.programaficharfeoe.data.model.VacacionesRequest
 import com.example.programaficharfeoe.data.remote.ApiService
-import com.example.programaficharfeoe.data.remote.RetrofitClient
 
-class VacacionesRepository {
+class VacacionesRepository(private val api: ApiService) {
 
-    private val api = RetrofitClient.api
-
-    // 🔹 Obtener vacaciones
-    suspend fun getVacaciones(): List<Vacacion>? {
-        val response = api.getVacaciones()
-
-        return if (response.isSuccessful) {
-            response.body()
-        } else {
-            null
+    suspend fun getVacaciones(): Result<List<Vacacion>> =
+        runCatching {
+            api.getVacaciones()
         }
-    }
 
-    // 🔹 Solicitar vacaciones
     suspend fun solicitarVacaciones(
         fechaInicio: String,
         fechaFin: String
-    ): Boolean {
-
-        val response = api.solicitarVacaciones(
-            VacacionesRequest(
-                fechaInicio = fechaInicio,
-                fechaFin = fechaFin
+    ): Result<Unit> =
+        runCatching {
+            api.solicitarVacaciones(
+                VacacionesRequest(fechaInicio, fechaFin)
             )
-        )
-
-        return response.isSuccessful
-    }
+        }
 }

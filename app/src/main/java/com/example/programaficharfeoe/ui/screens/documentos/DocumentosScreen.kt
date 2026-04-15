@@ -1,13 +1,11 @@
 package com.example.programaficharfeoe.ui.screens.documentos
 
-import DocumentosViewModel
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -21,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.model.Documento
+import com.example.programaficharfeoe.viewmodel.DocumentosViewModel
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun DocumentosScreen(
@@ -30,9 +30,9 @@ fun DocumentosScreen(
     val context = LocalContext.current
     val viewModel: DocumentosViewModel = viewModel()
 
-    val docs by viewModel.documentos
-    val isLoading by viewModel.isLoading
-    val error by viewModel.error
+    val docs = viewModel.documentos
+    val isLoading = viewModel.isLoading
+    val error = viewModel.error
 
     // Cargar documentos al entrar en la pantalla
     LaunchedEffect(tipo) {
@@ -83,7 +83,7 @@ fun DocumentosScreen(
                             onClick = {
                                 try {
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        data = Uri.parse(doc.url)
+                                        data = Uri.parse(doc.downloadUrl)
                                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
                                     context.startActivity(intent)

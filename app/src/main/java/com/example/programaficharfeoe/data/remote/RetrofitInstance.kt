@@ -1,6 +1,5 @@
 package com.example.programaficharfeoe.data.remote
 
-import android.util.Log
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.utils.Constants
 import okhttp3.OkHttpClient
@@ -8,46 +7,44 @@ import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
 
-    val baseUrl = Constants.BASE_URL
+    private const val TIMEOUT = 30L
 
-    // Interceptor para logs
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // Interceptor para añadir el token JWT
     private val authInterceptor = Interceptor { chain ->
-        val originalRequest = chain.request()
-        val token = SessionManager.getToken()
-
-        val requestBuilder = originalRequest.newBuilder()
+        val requestBuilder = chain.request().newBuilder()
             .addHeader("Content-Type", "application/json")
 
-        if (!token.isNullOrEmpty()) {
+        SessionManager.getToken()?.let { token ->
             requestBuilder.addHeader("Authorization", "Bearer $token")
-            Log.d("AUTH", "Token enviado correctamente")
-        } else {
-            Log.e("AUTH", "Token nulo o vacío")
         }
 
-        val request = requestBuilder.build()
-        chain.proceed(request)
+        chain.proceed(requestBuilder.build())
     }
 
     private val client = OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val api: FichajeApiService by lazy {
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(Constants.BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(FichajeApiService::class.java)
+    }
+
+    val api: ApiService by lazy {
+        retrofit.create(ApiService::class.java)
     }
 }

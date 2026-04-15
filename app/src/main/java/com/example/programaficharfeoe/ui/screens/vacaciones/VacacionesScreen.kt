@@ -17,11 +17,11 @@ fun VacacionesScreen(
     viewModel: VacacionesViewModel = viewModel()
 ) {
 
-    val vacaciones = viewModel.vacaciones.value
-    val isLoading = viewModel.isLoading.value
-    val error = viewModel.error.value
-    val solicitudOk = viewModel.solicitudOk.value
-    val errorSolicitud = viewModel.errorSolicitud.value
+    val vacaciones = viewModel.vacaciones
+    val isLoading = viewModel.isLoading
+    val error = viewModel.error
+    val solicitudOk = viewModel.solicitudOk
+    val errorSolicitud = viewModel.errorSolicitud
 
     var fechaInicio by remember { mutableStateOf("") }
     var fechaFin by remember { mutableStateOf("") }

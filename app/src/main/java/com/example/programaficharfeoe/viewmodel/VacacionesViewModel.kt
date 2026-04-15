@@ -1,76 +1,59 @@
 package com.example.programaficharfeoe.viewmodel
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.model.Vacacion
-import com.example.programaficharfeoe.data.repository.VacacionesRepository
+import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
 
 class VacacionesViewModel : ViewModel() {
 
-    private val repository = VacacionesRepository()
+    private val repository = AppModule.vacacionesRepository
 
-    // LISTADO
-    var vacaciones = mutableStateOf<List<Vacacion>>(emptyList())
+    var vacaciones by mutableStateOf<List<Vacacion>>(emptyList())
         private set
 
-    var isLoading = mutableStateOf(false)
+    var isLoading by mutableStateOf(false)
         private set
 
-    var error = mutableStateOf<String?>(null)
+    var error by mutableStateOf<String?>(null)
         private set
 
-    // SOLICITUD
-    var solicitudOk = mutableStateOf(false)
+    var solicitudOk by mutableStateOf(false)
         private set
 
-    var errorSolicitud = mutableStateOf<String?>(null)
+    var errorSolicitud by mutableStateOf<String?>(null)
         private set
 
-    // CARGAR VACACIONES
     fun cargarVacaciones() {
         viewModelScope.launch {
-            isLoading.value = true
-            error.value = null
+            isLoading = true
+            error = null
 
-            try {
-                val result = repository.getVacaciones()
+            repository.getVacaciones()
+                .onSuccess { vacaciones = it }
+                .onFailure { error = it.message }
 
-                if (result != null) {
-                    vacaciones.value = result
-                } else {
-                    error.value = "Error al cargar vacaciones"
-                }
-
-            } catch (e: Exception) {
-                error.value = e.message
-            }
-
-            isLoading.value = false
+            isLoading = false
         }
     }
 
-    // SOLICITAR VACACIONES
     fun solicitarVacaciones(fechaInicio: String, fechaFin: String) {
         viewModelScope.launch {
+            solicitudOk = false
+            errorSolicitud = null
 
-            solicitudOk.value = false
-            errorSolicitud.value = null
-
-            try {
-                val ok = repository.solicitarVacaciones(fechaInicio, fechaFin)
-
-                if (ok) {
-                    solicitudOk.value = true
-                    cargarVacaciones() // refrescar lista
-                } else {
-                    errorSolicitud.value = "Error al solicitar vacaciones"
+            repository.solicitarVacaciones(fechaInicio, fechaFin)
+                .onSuccess {
+                    solicitudOk = true
+                    cargarVacaciones()
                 }
-
-            } catch (e: Exception) {
-                errorSolicitud.value = e.message
-            }
+                .onFailure {
+                    errorSolicitud = it.message
+                }
         }
     }
 }

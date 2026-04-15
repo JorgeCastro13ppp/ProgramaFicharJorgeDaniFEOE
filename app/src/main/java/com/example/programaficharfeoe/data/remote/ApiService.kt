@@ -9,46 +9,61 @@ interface ApiService {
     @POST("login")
     suspend fun login(
         @Body request: LoginRequest
-    ): Response<LoginResponse>
+    ): LoginResponse
 
     @GET("faltas")
-    suspend fun getFaltas(): Response<List<Falta>>
+    suspend fun getFaltas(): List<Falta>
 
     @GET("documentos")
     suspend fun getDocumentos(
         @Query("tipo") tipo: String
-    ): Response<List<Documento>>
+    ): List<Documento>
 
     @GET("vacaciones")
-    suspend fun getVacaciones(): Response<List<Vacacion>>
+    suspend fun getVacaciones(): List<Vacacion>
 
     @POST("vacaciones")
     suspend fun solicitarVacaciones(
         @Body request: VacacionesRequest
-    ): Response<Map<String, String>>
+    ): MessageResponse
 
     @POST("fichar")
-    suspend fun fichar(
+    suspend fun ficharSimple(
         @Body request: FichajeRequest
-    ): Response<Map<String, String>>
+    ): MessageResponse
 
     @GET("fichajes")
     suspend fun getFichajes(
         @Query("userId") userId: Int
-    ): Response<List<Fichaje>>
+    ): List<Fichaje>
 
     @POST("fichajes-eventos")
-    suspend fun fichar(
+    suspend fun ficharEvento(
         @Body request: FichajeEventoRequest
-    ): Response<FichajeEventoResponse>
+    ): FichajeEventoResponse
 
     @GET("fichajes-eventos/hoy/{userId}")
     suspend fun getFichajesDelDia(
         @Path("userId") userId: Int
-    ): Response<List<Fichaje>>
+    ): List<Fichaje>
 
     @GET("fichajes-eventos/ultimo/{userId}")
     suspend fun getUltimoFichaje(
         @Path("userId") userId: Int
-    ): Response<Fichaje>
+    ): Fichaje
+
+    @POST("fichajes-eventos")
+    suspend fun fichar(
+        @Body request: FichajeEventoRequest
+    ): FichajeEventoResponse
+
+    @GET("fichajes-eventos/estado/{userId}")
+    suspend fun getEstadoActual(
+        @Path("userId") userId: Int
+    ): EstadoActualResponse
+
+    @GET("fichajes-eventos/siguiente-accion/{userId}")
+    suspend fun getSiguientesAcciones(
+        @Path("userId") userId: Int
+    ): SiguientesAccionesResponse
 }

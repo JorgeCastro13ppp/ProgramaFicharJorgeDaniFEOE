@@ -15,53 +15,58 @@ import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
 
 @Composable
 fun AppNavigation() {
-
     val navController = rememberNavController()
+
+    val startDestination = if (!SessionManager.getToken().isNullOrEmpty()) {
+        AppRoutes.Home.route
+    } else {
+        AppRoutes.Login.route
+    }
 
     NavHost(
         navController = navController,
-        startDestination = if (SessionManager.getToken() != null) "home" else "login"
+        startDestination = startDestination
     ) {
 
         // LOGIN
-        composable("login") {
+        composable(AppRoutes.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    navController.navigate(AppRoutes.Home.route) {
+                        popUpTo(AppRoutes.Login.route) { inclusive = true }
                     }
                 }
             )
         }
 
         // HOME
-        composable("home") {
+        composable(AppRoutes.Home.route) {
             HomeScreen(
-                onNavigate = { ruta ->
-                    navController.navigate(ruta)
+                onNavigate = { route ->
+                    navController.navigate(route)
                 },
                 onLogout = {
                     SessionManager.clearSession()
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                    navController.navigate(AppRoutes.Login.route) {
+                        popUpTo(AppRoutes.Home.route) { inclusive = true }
                     }
                 }
             )
         }
 
         // SELECCIÓN DE CONTEXTO
-        composable("context_selection") {
+        composable(AppRoutes.ContextSelection.route) {
             ContextSelectionScreen(navController)
         }
 
-        // FICHAJE (Pantalla intermedia)
-        composable("fichaje") {
+        // FICHAJE (redirige a selección de contexto)
+        composable(AppRoutes.Fichaje.route) {
             ContextSelectionScreen(navController)
         }
 
         // FICHAJE CON CONTEXTO
         composable(
-            route = "fichaje/{contexto}",
+            route = AppRoutes.FichajeConContexto.route,
             arguments = listOf(
                 navArgument("contexto") {
                     type = NavType.StringType
@@ -78,29 +83,29 @@ fun AppNavigation() {
         }
 
         // VACACIONES
-        composable("vacaciones") {
+        composable(AppRoutes.Vacaciones.route) {
             VacacionesScreen()
         }
 
         // DOCUMENTOS
-        composable("nominas") {
+        composable(AppRoutes.Nominas.route) {
             DocumentosScreen("Nóminas", "nomina")
         }
 
-        composable("reconocimientos") {
+        composable(AppRoutes.Reconocimientos.route) {
             DocumentosScreen("Reconocimientos", "reconocimiento")
         }
 
-        composable("formacion") {
+        composable(AppRoutes.Formacion.route) {
             DocumentosScreen("Formación", "formacion")
         }
 
-        composable("epis") {
+        composable(AppRoutes.Epis.route) {
             DocumentosScreen("EPIs", "epis")
         }
 
         // FALTAS
-        composable("faltas") {
+        composable(AppRoutes.Faltas.route) {
             FaltasScreen()
         }
     }

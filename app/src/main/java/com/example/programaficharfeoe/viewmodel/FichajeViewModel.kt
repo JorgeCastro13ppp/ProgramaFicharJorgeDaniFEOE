@@ -6,15 +6,14 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.location.LocationService
-import com.example.programaficharfeoe.data.model.Fichaje
-import com.example.programaficharfeoe.data.model.FichajeEventoRequest
-import com.example.programaficharfeoe.data.repository.FichajeRepository
+import com.example.programaficharfeoe.data.model.*
+import com.example.programaficharfeoe.di.AppModule
 import com.example.programaficharfeoe.utils.normalizarTimestamp
 import kotlinx.coroutines.launch
 
 class FichajeViewModel : ViewModel() {
 
-    private val repo = FichajeRepository()
+    private val repo = AppModule.fichajeRepository
 
     var fichajesLocales by mutableStateOf<List<Fichaje>>(emptyList())
         private set
@@ -31,7 +30,6 @@ class FichajeViewModel : ViewModel() {
     var cargando by mutableStateOf(false)
         private set
 
-    // Acciones permitidas por contexto
     var accionesTaller by mutableStateOf<List<String>>(emptyList())
         private set
 
@@ -43,51 +41,61 @@ class FichajeViewModel : ViewModel() {
 
     var mensaje by mutableStateOf<String?>(null)
 
-    // Carga los datos desde el backend
+    fun limpiarMensaje() {
+        mensaje = null
+    }
+
     fun cargarDatos(userId: Int) {
         viewModelScope.launch {
+            cargando = true
             try {
-                cargando = true
+                val fichajesResult = repo.getFichajesDelDia(userId)
+                val estadoResult = repo.getEstadoActual(userId)
+                val accionesResult = repo.getSiguientesAcciones(userId)
 
-                val fichajes = repo.getFichajesDelDia(userId)
-                val estado = repo.getEstadoActual(userId)
-                val siguientes = repo.getSiguientesAcciones(userId)
+                fichajesResult.onSuccess { fichajes ->
+                    fichajesLocales = fichajes.map {
+                        Fichaje(
+                            id = it.id,
+                            userId = it.userId,
+                            username = it.username,
+                            fechaHora = normalizarTimestamp(it.fechaHora),
+                            tipo = it.tipo.uppercase()
+                        )
+                    }.sortedBy { it.fechaHora }
 
-                fichajesLocales = fichajes.map {
-                    Fichaje(
-                        id = it.id,
-                        user_id = it.userId,
-                        tipo = it.tipo.uppercase(),
-                        fecha_hora = normalizarTimestamp(it.fechaHora)
-                    )
-                }.sortedBy { it.fecha_hora }
+                    haFichadoHoy = fichajesLocales.isNotEmpty()
+                    ultimaAccion = fichajesLocales.lastOrNull()?.tipo
+                }
 
-                haFichadoHoy = fichajesLocales.isNotEmpty()
-                ultimaAccion = fichajesLocales.lastOrNull()?.tipo
-                estadoActual = estado.estado
+                estadoResult.onSuccess {
+                    estadoActual = it.estado
+                }
 
-                // Acciones por contexto
-                accionesTaller = siguientes.accionesTaller
-                accionesObra = siguientes.accionesObra
-                accionesReparacion = siguientes.accionesReparacion
+                accionesResult.onSuccess { response ->
+                    estadoActual = response.estado
+                    accionesTaller = response.accionesTaller
+                    accionesObra = response.accionesObra
+                    accionesReparacion = response.accionesReparacion
+                }
 
-                Log.d("FICHAJE", "Ha fichado hoy: $haFichadoHoy")
-                Log.d("FICHAJE", "Estado actual: $estadoActual")
-                Log.d("FICHAJE", "Acciones Taller: $accionesTaller")
-                Log.d("FICHAJE", "Acciones Obra: $accionesObra")
-                Log.d("FICHAJE", "Acciones Reparación: $accionesReparacion")
+                accionesResult.onFailure {
+                    mensaje = it.message ?: "Error al obtener las acciones"
+                    Log.e("FICHAJE", "Error al obtener acciones", it)
+                }
 
             } catch (e: Exception) {
                 mensaje = "Error al cargar los datos"
-                Log.e("FICHAJE", "Error al cargar datos", e)
+                Log.e("FICHAJE", "Error", e)
             } finally {
                 cargando = false
             }
         }
     }
 
-    // Determina si una acción está permitida según el backend
-
+    /**
+     * Determina si una acción está permitida según el backend.
+     */
     fun puedeFichar(
         accion: String,
         contextoSeleccionado: String
@@ -116,8 +124,6 @@ class FichajeViewModel : ViewModel() {
         return accionesContexto.contains(accionBackend)
     }
 
-    // Registra un fichaje
-
     fun fichar(
         context: Context,
         userId: Int,
@@ -126,29 +132,20 @@ class FichajeViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val locationService = LocationService(context)
-                val location = locationService.getLastLocation()
+                val location = LocationService(context).getLastLocation()
 
                 val request = FichajeEventoRequest(
                     userId = userId,
                     timestamp = System.currentTimeMillis(),
                     contexto = contexto.uppercase(),
                     accion = accion.uppercase(),
-                    latitud = location?.first ?: 0.0,
-                    longitud = location?.second ?: 0.0,
-                    accuracy = location?.third ?: 0.0
-                )
-
-                Log.d(
-                    "FICHAJE",
-                    "Enviando: ${accion.uppercase()}_${contexto.uppercase()}"
+                    latitud = location?.latitude ?: 0.0,
+                    longitud = location?.longitude ?: 0.0,
+                    accuracy = location?.accuracy ?: 0.0
                 )
 
                 repo.fichar(request)
-
-                // Recargar datos tras el fichaje
                 cargarDatos(userId)
-
                 mensaje = "Fichaje registrado correctamente"
 
             } catch (e: Exception) {

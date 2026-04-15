@@ -33,12 +33,20 @@ fun FichajeScreen(
     val viewModel: FichajeViewModel = viewModel()
     val userId = SessionManager.getUserId()
 
-    val contexto = contextoInicial.uppercase()
+    if (userId == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Usuario no autenticado")
+        }
+        return
+    }
 
+    val contexto = contextoInicial.uppercase()
     val fichajes = viewModel.fichajesLocales
     val cargando = viewModel.cargando
 
-    // Solicitar permiso de ubicación
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -93,11 +101,8 @@ fun FichajeScreen(
         )
 
         acciones.forEach { (izq, der) ->
-
-            val puedeIzq =
-                !cargando && viewModel.puedeFichar(izq, contexto)
-            val puedeDer =
-                !cargando && viewModel.puedeFichar(der, contexto)
+            val puedeIzq = viewModel.puedeFichar(izq, contexto)
+            val puedeDer = viewModel.puedeFichar(der, contexto)
 
             Row(
                 modifier = Modifier
@@ -158,10 +163,10 @@ fun FichajeScreen(
                         }
 
                         viewModel.fichar(
-                            context,
-                            userId,
-                            contexto,
-                            der
+                            context = context,
+                            userId = userId,
+                            contexto = contexto,
+                            accion = izq
                         )
                     },
                     enabled = puedeDer,
@@ -207,7 +212,7 @@ fun FichajeScreen(
                     items(fichajes) { fichaje ->
                         RegistroItem(
                             tipo = fichaje.tipo,
-                            timestamp = fichaje.fecha_hora
+                            timestamp = fichaje.fechaHora
                         )
                     }
                 }

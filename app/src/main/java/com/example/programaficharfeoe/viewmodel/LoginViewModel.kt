@@ -1,41 +1,41 @@
 package com.example.programaficharfeoe.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.local.SessionManager
-import com.example.programaficharfeoe.data.repository.AuthRepository
+import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    private val repository: AuthRepository = AuthRepository()
-) : ViewModel() {
+class LoginViewModel : ViewModel() {
+
+    private val repository = AppModule.authRepository
 
     var username by mutableStateOf("")
     var password by mutableStateOf("")
 
     var loginResult by mutableStateOf<String?>(null)
+        private set
+
     var isLoading by mutableStateOf(false)
+        private set
 
     fun login() {
         viewModelScope.launch {
-
             isLoading = true
 
-            val response = repository.login(username, password)
+            repository.login(username, password)
+                .onSuccess {
+                    SessionManager.saveToken(it.token)
+                    SessionManager.saveUsername(username)
+                    SessionManager.saveUserId(it.userId)
+                    loginResult = "OK"
+                }
+                .onFailure {
+                    loginResult = "ERROR"
+                }
 
             isLoading = false
-
-            if (response != null) {
-                SessionManager.saveToken(response.token)
-                SessionManager.saveUsername(username)
-                SessionManager.saveUserId(response.userId)
-                loginResult = "OK"
-            } else {
-                loginResult = "ERROR"
-            }
         }
     }
 }
