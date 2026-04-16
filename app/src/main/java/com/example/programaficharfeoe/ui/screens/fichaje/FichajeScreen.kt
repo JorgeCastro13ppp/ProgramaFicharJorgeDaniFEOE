@@ -6,10 +6,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,15 +19,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.utils.normalizarTimestamp
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.example.programaficharfeoe.data.model.Fichaje
 
 @Composable
-fun FichajeScreen(
-    contextoInicial: String,
-    onBack: () -> Unit
-) {
+fun FichajeScreen() {
     val context = LocalContext.current
     val viewModel: FichajeViewModel = viewModel()
     val userId = SessionManager.getUserId()
@@ -43,9 +44,9 @@ fun FichajeScreen(
         return
     }
 
-    val contexto = contextoInicial.uppercase()
     val fichajes = viewModel.fichajesLocales
     val cargando = viewModel.cargando
+    val accionesDisponibles = viewModel.obtenerAccionesDisponibles()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -56,7 +57,6 @@ fun FichajeScreen(
         viewModel.cargarDatos(userId)
     }
 
-    // Pantalla de carga
     if (cargando) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -81,113 +81,55 @@ fun FichajeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contexto
-
+        // 🔹 ACCIONES DISPONIBLES
         Text(
-            text = "Contexto: $contexto",
+            text = "Acciones disponibles",
             style = MaterialTheme.typography.titleMedium
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Acciones
-        Text("Acciones")
-        Spacer(modifier = Modifier.height(8.dp))
+        if (accionesDisponibles.isEmpty()) {
+            Text("No hay acciones disponibles en este momento.")
+        } else {
+            accionesDisponibles.forEach { (accion, contexto) ->
 
-        val acciones = listOf(
-            "ENTRADA" to "SALIDA",
-            "INICIO_VIAJE" to "FIN_VIAJE",
-            "INICIO_DESCANSO" to "FIN_DESCANSO"
-        )
-
-        acciones.forEach { (izq, der) ->
-            val puedeIzq = viewModel.puedeFichar(izq, contexto)
-            val puedeDer = viewModel.puedeFichar(der, contexto)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
-                Button(
-                    onClick = {
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            Toast.makeText(
-                                context,
-                                "Permiso de ubicación denegado",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-
-                        viewModel.fichar(
-                            context,
-                            userId,
-                            contexto,
-                            izq
-                        )
-                    },
-                    enabled = puedeIzq,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(70.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (puedeIzq)
-                            Color(0xFF4CAF50)
-                        else Color.LightGray
-                    )
-                ) {
-                    Text(izq.replace("_", " "))
+                val colorBoton = when (accion) {
+                    "ENTRADA" -> Color(0xFF4CAF50)
+                    "SALIDA" -> Color(0xFFF44336)
+                    "INICIO_VIAJE", "FIN_VIAJE" -> Color(0xFF2196F3)
+                    "INICIO_DESCANSO", "FIN_DESCANSO" -> Color(0xFFFF9800)
+                    else -> MaterialTheme.colorScheme.primary
                 }
 
                 Button(
                     onClick = {
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            Toast.makeText(
-                                context,
-                                "Permiso de ubicación denegado",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-
                         viewModel.fichar(
-                            context = context,
-                            userId = userId,
-                            contexto = contexto,
-                            accion = izq
+                            context,
+                            userId,
+                            contexto,
+                            accion
                         )
                     },
-                    enabled = puedeDer,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(70.dp),
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .height(60.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (puedeDer)
-                            Color(0xFFF44336)
-                        else Color.LightGray
+                        containerColor = colorBoton
                     )
                 ) {
-                    Text(der.replace("_", " "))
+                    Text(
+                        text = "${accion.replace("_", " ")} - ${contexto.replace("_", " ")}"
+                    )
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // REGISTROS DEL DÍA
+        // 🔹 REGISTROS DEL DÍA
         Text(
             text = "Registros de hoy",
             style = MaterialTheme.typography.titleMedium,
@@ -197,22 +139,40 @@ fun FichajeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), // Permite que la lista sea deslizable
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
             if (fichajes.isEmpty()) {
-                Text(
-                    text = "No hay registros hoy",
-                    modifier = Modifier.padding(16.dp)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No hay registros hoy",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
                 LazyColumn(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(fichajes) { fichaje ->
-                        RegistroItem(
-                            tipo = fichaje.tipo,
-                            timestamp = fichaje.fechaHora
+                    items(
+                        fichajes.sortedByDescending { it.fechaHora }
+                    ) { fichaje ->
+                        RegistroItem(fichaje)
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            thickness = 0.5.dp
                         )
                     }
                 }
@@ -220,57 +180,78 @@ fun FichajeScreen(
         }
     }
 
-    // Mensajes
+    // 🔹 MENSAJES
     viewModel.mensaje?.let { mensaje ->
         LaunchedEffect(mensaje) {
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
-            viewModel.mensaje = null
+            viewModel.limpiarMensaje()
         }
     }
 }
 
 @Composable
-fun RegistroItem(tipo: String, timestamp: Long) {
-    val formatoHora = SimpleDateFormat("dd/MM/yy HH:mm:ss", Locale.getDefault())
-    val fechaFormateada = formatoHora.format(Date(timestamp))
+fun RegistroItem(fichaje: Fichaje) {
+    val fechaFormateada = normalizarTimestamp(fichaje.fechaHora)
 
-    // Separar acción y contexto (formato: ACCION · CONTEXTO)
-    val partes = tipo.split("·")
+    // Limpiar y normalizar el tipo
+    val partes = fichaje.tipo
+        .trim()
+        .replace("·", "")              // Elimina puntos intermedios
+        .replace(" ", "_")             // Sustituye espacios por guiones bajos
+        .replace("__", "_")            // Evita dobles guiones bajos
+        .split("_")
+        .filter { it.isNotBlank() }    // Elimina elementos vacíos
 
-    val accion = partes.getOrNull(0)
-        ?.trim()
-        ?.lowercase()
-        ?.replace("_", " ")
-        ?.replaceFirstChar { it.uppercase() }
-        ?: "Desconocido"
+    // Última parte: contexto
+    val contexto = partes.lastOrNull()?.uppercase() ?: ""
 
-    val contexto = partes.getOrNull(1)
-        ?.trim()
-        ?.lowercase()
-        ?.replaceFirstChar { it.uppercase() }
-        ?: ""
+    // Resto: acción
+    val accion = partes
+        .dropLast(1)
+        .joinToString(" ")
+        .uppercase()
 
-    val textoFinal = if (contexto.isNotEmpty()) {
-        "$accion - $contexto"
-    } else {
-        accion
+    val textoAccion = listOf(accion, contexto)
+        .filter { it.isNotBlank() }
+        .joinToString(" - ")
+
+    // Color según el tipo de fichaje
+    val colorIndicador = when {
+        fichaje.tipo.startsWith("ENTRADA") -> Color(0xFF4CAF50)
+        fichaje.tipo.startsWith("SALIDA") -> Color(0xFFF44336)
+        fichaje.tipo.contains("DESCANSO") -> Color(0xFFFF9800)
+        fichaje.tipo.contains("VIAJE") -> Color(0xFF2196F3)
+        else -> MaterialTheme.colorScheme.primary
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = textoFinal,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+        // Indicador de color
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(40.dp)
+                .background(colorIndicador, RoundedCornerShape(2.dp))
         )
-        Text(
-            text = fechaFormateada,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.DarkGray
-        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = textoAccion,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = fechaFormateada,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

@@ -8,7 +8,7 @@ fun FichajeResponse.toFichaje(): Fichaje {
         id = id,
         userId = userId,
         username = null,
-        fechaHora = normalizarTimestamp(fechaHora),
+        fechaHora = fechaHora,
         tipo = tipo.uppercase()
     )
 }

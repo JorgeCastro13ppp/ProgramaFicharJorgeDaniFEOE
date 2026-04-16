@@ -14,65 +14,31 @@ data class LocationData(
     val accuracy: Double
 )
 
-class LocationService(context: Context) {
-
-    private val fusedLocationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(
-            context.applicationContext
-        )
+class LocationService(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun getLastLocation(): LocationData? {
         return suspendCancellableCoroutine { cont ->
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(context)
 
-            // 1. Intentar obtener la última ubicación conocida
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
-                    if (cont.isActive) {
-                        if (location != null) {
-                            cont.resume(
-                                LocationData(
-                                    latitude = location.latitude,
-                                    longitude = location.longitude,
-                                    accuracy = location.accuracy.toDouble()
-                                )
+                    if (location != null) {
+                        cont.resume(
+                            LocationData(
+                                latitude = location.latitude,
+                                longitude = location.longitude,
+                                accuracy = location.accuracy.toDouble()
                             )
-                        } else {
-                            requestCurrentLocation(cont)
-                        }
-                    }
-                }
-                .addOnFailureListener {
-                    if (cont.isActive) {
+                        )
+                    } else {
                         cont.resume(null)
                     }
                 }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun requestCurrentLocation(
-        cont: kotlinx.coroutines.CancellableContinuation<LocationData?>
-    ) {
-        fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            null
-        ).addOnSuccessListener { location ->
-            if (cont.isActive) {
-                cont.resume(
-                    location?.let {
-                        LocationData(
-                            latitude = it.latitude,
-                            longitude = it.longitude,
-                            accuracy = it.accuracy.toDouble()
-                        )
-                    }
-                )
-            }
-        }.addOnFailureListener {
-            if (cont.isActive) {
-                cont.resume(null)
-            }
+                .addOnFailureListener {
+                    cont.resume(null)
+                }
         }
     }
 }

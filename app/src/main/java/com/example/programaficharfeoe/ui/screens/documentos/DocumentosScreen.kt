@@ -82,17 +82,23 @@ fun DocumentosScreen(
                             doc = doc,
                             onClick = {
                                 try {
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        data = Uri.parse(doc.downloadUrl)
+                                    val uri = Uri.parse(doc.downloadUrl)
+
+                                    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
-                                    context.startActivity(intent)
+
+                                    val chooser = Intent.createChooser(intent, "Abrir documento con")
+
+                                    context.startActivity(chooser)
+
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
                                         "No se pudo abrir el documento",
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    e.printStackTrace()
                                 }
                             }
                         )

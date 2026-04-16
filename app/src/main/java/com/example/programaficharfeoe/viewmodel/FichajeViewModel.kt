@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.location.LocationService
 import com.example.programaficharfeoe.data.model.*
 import com.example.programaficharfeoe.di.AppModule
-import com.example.programaficharfeoe.utils.normalizarTimestamp
 import kotlinx.coroutines.launch
 
 class FichajeViewModel : ViewModel() {
@@ -54,15 +53,17 @@ class FichajeViewModel : ViewModel() {
                 val accionesResult = repo.getSiguientesAcciones(userId)
 
                 fichajesResult.onSuccess { fichajes ->
-                    fichajesLocales = fichajes.map {
-                        Fichaje(
-                            id = it.id,
-                            userId = it.userId,
-                            username = it.username,
-                            fechaHora = normalizarTimestamp(it.fechaHora),
-                            tipo = it.tipo.uppercase()
-                        )
-                    }.sortedBy { it.fechaHora }
+                    fichajesLocales = fichajes
+                        .sortedBy { it.fechaHora }
+                        .map {
+                            Fichaje(
+                                id = it.id,
+                                userId = it.userId,
+                                username = it.username,
+                                fechaHora = it.fechaHora,
+                                tipo = it.tipo.uppercase()
+                            )
+                        }
 
                     haFichadoHoy = fichajesLocales.isNotEmpty()
                     ultimaAccion = fichajesLocales.lastOrNull()?.tipo
@@ -93,14 +94,10 @@ class FichajeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Determina si una acción está permitida según el backend.
-     */
     fun puedeFichar(
         accion: String,
         contextoSeleccionado: String
     ): Boolean {
-
         val accionBase = accion.uppercase()
         val contexto = contextoSeleccionado.uppercase()
 
@@ -153,5 +150,22 @@ class FichajeViewModel : ViewModel() {
                 Log.e("FICHAJE", "Error al fichar", e)
             }
         }
+    }
+
+    fun obtenerAccionesDisponibles(): List<Pair<String, String>> {
+        val acciones = mutableListOf<Pair<String, String>>()
+
+        fun procesar(lista: List<String>, contexto: String) {
+            lista.forEach { accionCompleta ->
+                val accion = accionCompleta.substringBeforeLast("_")
+                acciones.add(accion to contexto)
+            }
+        }
+
+        procesar(accionesTaller, "TALLER")
+        procesar(accionesObra, "OBRA")
+        procesar(accionesReparacion, "REPARACION")
+
+        return acciones
     }
 }

@@ -1,9 +1,9 @@
 package com.example.programaficharfeoe.utils
 
-// NORMALIZAR TIMESTAMP
-fun normalizarTimestamp(timestamp: Long): Long =
-    when {
-        timestamp <= 0 -> 0L
-        timestamp < 1_000_000_000_000L -> timestamp * 1000
-        else -> timestamp
-    }
+import java.text.SimpleDateFormat
+import java.util.*
+
+fun normalizarTimestamp(timestamp: Long): String {
+    val formato = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+    return formato.format(Date(timestamp))
+}
