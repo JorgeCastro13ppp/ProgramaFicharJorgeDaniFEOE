@@ -3,11 +3,18 @@ package com.example.programaficharfeoe.ui.screens.documentos
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Security
@@ -15,18 +22,194 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.programaficharfeoe.data.model.Documento
 import com.example.programaficharfeoe.viewmodel.DocumentosViewModel
-import androidx.compose.foundation.lazy.items
+
+/* ===================================================== */
+/* ================= MENU DOCUMENTOS =================== */
+/* ===================================================== */
+
+@Composable
+fun DocumentosMenuScreen(navController: NavController) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        PremiumHeader()
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "Categorías",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+            CategoriaCard(
+                titulo = "Nóminas",
+                subtitulo = "Recibos salariales",
+                icono = Icons.Default.PictureAsPdf
+            ) {
+                navController.navigate("documentos/nomina/Nóminas")
+            }
+
+            CategoriaCard(
+                titulo = "EPIs",
+                subtitulo = "Equipos de protección",
+                icono = Icons.Default.Security
+            ) {
+                navController.navigate("documentos/epis/EPIs")
+            }
+
+            CategoriaCard(
+                titulo = "Formación",
+                subtitulo = "Cursos y certificados",
+                icono = Icons.Default.School
+            ) {
+                navController.navigate("documentos/formacion/Formación")
+            }
+
+            CategoriaCard(
+                titulo = "Reconocimientos",
+                subtitulo = "Informes médicos",
+                icono = Icons.Default.Description
+            ) {
+                navController.navigate("documentos/reconocimiento/Reconocimientos")
+            }
+        }
+    }
+}
+
+@Composable
+fun PremiumHeader() {
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            Color(0xFF1E3A8A),
+                            Color(0xFF2563EB)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+
+            Column {
+
+                Text(
+                    text = "Documentos",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Accede y descarga tus archivos",
+                    color = Color.White.copy(alpha = 0.90f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoriaCard(
+    titulo: String,
+    subtitulo: String,
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(92.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        Color(0xFF2D6CFF).copy(alpha = 0.15f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icono,
+                    contentDescription = titulo,
+                    tint = Color(0xFF2D6CFF)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = titulo,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = subtitulo,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+/* ===================================================== */
+/* ================= LISTADO DOCUMENTOS ================= */
+/* ===================================================== */
 
 @Composable
 fun DocumentosScreen(
     titulo: String,
     tipo: String
 ) {
+
     val context = LocalContext.current
     val viewModel: DocumentosViewModel = viewModel()
 
@@ -34,7 +217,6 @@ fun DocumentosScreen(
     val isLoading = viewModel.isLoading
     val error = viewModel.error
 
-    // Cargar documentos al entrar en la pantalla
     LaunchedEffect(tipo) {
         viewModel.cargarDocumentos(tipo)
     }
@@ -45,16 +227,12 @@ fun DocumentosScreen(
             .padding(16.dp)
     ) {
 
-        // 🔹 Título
-        Text(
-            text = titulo,
-            style = MaterialTheme.typography.headlineMedium
-        )
+        PremiumHeaderListado(titulo)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         when {
-            // Indicador de carga
+
             isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -64,7 +242,6 @@ fun DocumentosScreen(
                 }
             }
 
-            // Mensaje de error
             error != null -> {
                 Text(
                     text = "Error: $error",
@@ -72,25 +249,31 @@ fun DocumentosScreen(
                 )
             }
 
-            // Lista de documentos
+            docs.isEmpty() -> {
+                EmptyState()
+            }
+
             else -> {
-                LazyColumn {
-                    items(
-                        docs.sortedByDescending { it.id }
-                    ) { doc ->
-                        DocumentoItem(
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(docs.sortedByDescending { it.id }) { doc ->
+
+                        DocumentoPremiumItem(
                             doc = doc,
                             onClick = {
                                 try {
-                                    val uri = Uri.parse(doc.downloadUrl)
+                                    val intent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse(doc.downloadUrl)
+                                    )
 
-                                    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-
-                                    val chooser = Intent.createChooser(intent, "Abrir documento con")
-
-                                    context.startActivity(chooser)
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            intent,
+                                            "Abrir documento con"
+                                        )
+                                    )
 
                                 } catch (e: Exception) {
                                     Toast.makeText(
@@ -98,7 +281,6 @@ fun DocumentosScreen(
                                         "No se pudo abrir el documento",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    e.printStackTrace()
                                 }
                             }
                         )
@@ -110,41 +292,126 @@ fun DocumentosScreen(
 }
 
 @Composable
-fun DocumentoItem(
+fun PremiumHeaderListado(titulo: String) {
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            Color(0xFF1E3A8A),
+                            Color(0xFF2563EB)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+
+            Column {
+
+                Text(
+                    text = titulo,
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Tus documentos disponibles",
+                    color = Color.White.copy(alpha = 0.90f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DocumentoPremiumItem(
     doc: Documento,
     onClick: () -> Unit
 ) {
+
     val icono = when (doc.tipo.lowercase()) {
         "nomina" -> Icons.Default.PictureAsPdf
-        "formacion" -> Icons.Default.School
         "epis" -> Icons.Default.Security
+        "formacion" -> Icons.Default.School
         else -> Icons.Default.Description
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        )
     ) {
+
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        Color(0xFF2D6CFF).copy(alpha = 0.15f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icono,
+                    contentDescription = null,
+                    tint = Color(0xFF2D6CFF)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = doc.nombre,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "Pulsa para abrir",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             Icon(
-                imageVector = icono,
+                imageVector = Icons.Default.OpenInNew,
                 contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = doc.nombre,
-                style = MaterialTheme.typography.bodyLarge
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "No hay documentos disponibles",
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

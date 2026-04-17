@@ -1,16 +1,29 @@
 package com.example.programaficharfeoe.ui.screens.vacaciones
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BeachAccess
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.viewmodel.VacacionesViewModel
+import java.util.Calendar
 
 @Composable
 fun VacacionesScreen(
@@ -31,152 +44,326 @@ fun VacacionesScreen(
         viewModel.cargarVacaciones()
     }
 
-    // VALIDACIÓN
-    fun validarFechas(inicio: String, fin: String): String? {
+    fun validarFechas(
+        inicio: String,
+        fin: String
+    ): String? {
 
         if (inicio.isBlank() || fin.isBlank()) {
             return "Debes seleccionar ambas fechas"
         }
 
-        fun parseFecha(fecha: String): java.util.Calendar {
-            val parts = fecha.split("-")
-            val cal = java.util.Calendar.getInstance()
-            cal.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
-            cal.set(java.util.Calendar.MILLISECOND, 0)
-            return cal
+        fun parse(fecha: String): Calendar {
+            val p = fecha.split("-")
+            return Calendar.getInstance().apply {
+                set(p[0].toInt(), p[1].toInt() - 1, p[2].toInt(), 0, 0, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
         }
 
-        val inicioCal = parseFecha(inicio)
-        val finCal = parseFecha(fin)
+        val inicioCal = parse(inicio)
+        val finCal = parse(fin)
 
-        // fin antes que inicio
         if (finCal.before(inicioCal)) {
-            return "La fecha fin no puede ser anterior a la de inicio"
-        }
-
-        // fechas pasadas
-        val hoy = java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-
-        if (inicioCal.before(hoy)) {
-            return "No puedes seleccionar fechas pasadas"
+            return "La fecha fin no puede ser anterior"
         }
 
         return null
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
 
-        Text(
-            text = "Vacaciones",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        item {
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // HEADER
+            Card(
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFF1E3A8A),
+                                    Color(0xFF2563EB)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-        Text("Solicitar vacaciones")
+                        Icon(
+                            Icons.Default.BeachAccess,
+                            null,
+                            tint = Color.White
+                        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
 
-        DatePickerField(
-            label = "Fecha inicio",
-            selectedDate = fechaInicio,
-            onDateSelected = { fechaInicio = it }
-        )
+                        Column {
 
-        Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Vacaciones",
+                                color = Color.White,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold
+                            )
 
-        DatePickerField(
-            label = "Fecha fin",
-            selectedDate = fechaFin,
-            onDateSelected = { fechaFin = it }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = {
-
-                val error = validarFechas(fechaInicio, fechaFin)
-
-                if (error != null) {
-                    errorFechas = error
-                } else {
-                    errorFechas = null
-                    viewModel.solicitarVacaciones(fechaInicio, fechaFin)
-                    fechaInicio = ""
-                    fechaFin = ""
-                }
-            },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Enviar solicitud")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // ERROR VALIDACIÓN
-        errorFechas?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        // RESPUESTA BACKEND
-        if (solicitudOk) {
-            Text("Solicitud enviada correctamente")
-        }
-
-        errorSolicitud?.let {
-            Text("Error: $it")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // LISTADO
-        when {
-            isLoading -> {
-                Text("Cargando...")
-            }
-
-            error != null -> {
-                Text("Error: $error")
-            }
-
-            else -> {
-                LazyColumn {
-                    items(vacaciones) { v ->
-
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            elevation = CardDefaults.cardElevation(6.dp)
-                        ) {
-
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-
-                                Text("Inicio: ${v.fechaInicio}")
-                                Text("Fin: ${v.fechaFin}")
-                                Text("Estado: ${v.estado}")
-                            }
+                            Text(
+                                "Solicita y revisa tus vacaciones",
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
                         }
                     }
                 }
             }
         }
+
+        // RESUMEN
+        item {
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+
+                    ResumenBox("Disponibles", "18")
+                    ResumenBox("Pendientes", "2")
+                    ResumenBox("Usados", "10")
+                }
+            }
+        }
+
+        // SOLICITUD
+        item {
+
+            Text(
+                text = "Nueva solicitud",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        item {
+            DatePickerField(
+                label = "Fecha inicio",
+                selectedDate = fechaInicio,
+                onDateSelected = {
+                    fechaInicio = it
+                }
+            )
+        }
+
+        item {
+            DatePickerField(
+                label = "Fecha fin",
+                selectedDate = fechaFin,
+                onDateSelected = {
+                    fechaFin = it
+                }
+            )
+        }
+
+        item {
+
+            Button(
+                onClick = {
+
+                    val e = validarFechas(
+                        fechaInicio,
+                        fechaFin
+                    )
+
+                    if (e != null) {
+                        errorFechas = e
+                    } else {
+                        errorFechas = null
+                        viewModel.solicitarVacaciones(
+                            fechaInicio,
+                            fechaFin
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+
+                Icon(Icons.Default.Send, null)
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    "Enviar solicitud",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        errorFechas?.let {
+            item {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+
+        if (solicitudOk) {
+            item {
+                Text(
+                    "Solicitud enviada correctamente",
+                    color = Color(0xFF22C55E)
+                )
+            }
+        }
+
+        errorSolicitud?.let {
+            item {
+                Text(
+                    "Error: $it",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Historial",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        if (isLoading) {
+
+            item {
+                CircularProgressIndicator()
+            }
+
+        } else if (error != null) {
+
+            item {
+                Text(
+                    "Error: $error",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+        } else {
+
+            items(vacaciones) { v ->
+
+                val estado = v.estado.trim().uppercase()
+
+                val colorEstado = when (estado) {
+                    "APROBADA",
+                    "APROBADO" -> Color(0xFF22C55E)
+
+                    "PENDIENTE" -> Color(0xFFF59E0B)
+
+                    "RECHAZADA",
+                    "RECHAZADO" -> Color(0xFFEF4444)
+
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                val icono = when (estado) {
+                    "APROBADA",
+                    "APROBADO" -> Icons.Default.CheckCircle
+
+                    "PENDIENTE" -> Icons.Default.Pending
+
+                    "RECHAZADA",
+                    "RECHAZADO" -> Icons.Default.Close
+
+                    else -> Icons.Default.CalendarMonth
+                }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            icono,
+                            null,
+                            tint = colorEstado
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                "${v.fechaInicio} → ${v.fechaFin}",
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                estado,
+                                color = colorEstado
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+fun ResumenBox(
+    titulo: String,
+    valor: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            titulo,
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text(
+            valor,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -188,63 +375,91 @@ fun DatePickerField(
     onDateSelected: (String) -> Unit
 ) {
 
-    var showDialog by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
+    var showDialog by remember {
+        mutableStateOf(false)
+    }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    val datePickerState =
+        rememberDatePickerState()
+
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
 
         OutlinedTextField(
             value = selectedDate,
             onValueChange = {},
-            label = { Text(label) },
             readOnly = true,
-            modifier = Modifier.fillMaxWidth()
+            label = { Text(label) },
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                Icon(
+                    Icons.Default.CalendarMonth,
+                    null
+                )
+            }
         )
 
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .clickable { showDialog = true }
+                .clickable {
+                    showDialog = true
+                }
         )
     }
 
     if (showDialog) {
+
         DatePickerDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                showDialog = false
+            },
+
             confirmButton = {
-                TextButton(onClick = {
-                    showDialog = false
+                TextButton(
+                    onClick = {
 
-                    val millis = datePickerState.selectedDateMillis
-                    if (millis != null) {
+                        val millis =
+                            datePickerState.selectedDateMillis
 
-                        val calendar = java.util.Calendar.getInstance()
-                        calendar.timeInMillis = millis
+                        if (millis != null) {
 
-                        val year = calendar.get(java.util.Calendar.YEAR)
-                        val month = calendar.get(java.util.Calendar.MONTH) + 1
-                        val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                            val c =
+                                Calendar.getInstance()
 
-                        val formattedDate = String.format(
-                            "%04d-%02d-%02d",
-                            year,
-                            month,
-                            day
-                        )
+                            c.timeInMillis = millis
 
-                        onDateSelected(formattedDate)
+                            val fecha =
+                                "%04d-%02d-%02d".format(
+                                    c.get(Calendar.YEAR),
+                                    c.get(Calendar.MONTH) + 1,
+                                    c.get(Calendar.DAY_OF_MONTH)
+                                )
+
+                            onDateSelected(fecha)
+                        }
+
+                        showDialog = false
                     }
-                }) {
+                ) {
                     Text("OK")
                 }
             },
+
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
                     Text("Cancelar")
                 }
             }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState
+            )
         }
     }
 }

@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.remote.creation.core)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui)
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
