@@ -7,14 +7,18 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.ui.screens.documentos.DocumentosMenuScreen
 import com.example.programaficharfeoe.ui.screens.documentos.DocumentosScreen
 import com.example.programaficharfeoe.ui.screens.faltas.FaltasScreen
 import com.example.programaficharfeoe.ui.screens.fichaje.FichajeScreen
+import com.example.programaficharfeoe.ui.screens.perfil.PerfilScreen
 import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onLogout: () -> Unit
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -56,6 +60,12 @@ fun MainScreen() {
                 DocumentosScreen(
                     titulo = titulo,
                     tipo = tipo
+                )
+            }
+
+            composable(BottomNavItem.Perfil.route) {
+                PerfilScreen(
+                    onLogout = onLogout
                 )
             }
         }

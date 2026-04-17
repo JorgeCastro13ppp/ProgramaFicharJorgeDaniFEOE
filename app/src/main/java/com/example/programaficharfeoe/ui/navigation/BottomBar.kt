@@ -13,7 +13,8 @@ fun BottomBar(navController: NavController) {
         BottomNavItem.Fichaje,
         BottomNavItem.Vacaciones,
         BottomNavItem.Faltas,
-        BottomNavItem.Documentos
+        BottomNavItem.Documentos,
+        BottomNavItem.Perfil
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

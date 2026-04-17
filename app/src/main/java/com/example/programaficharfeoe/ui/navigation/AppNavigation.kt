@@ -7,33 +7,47 @@ import com.example.programaficharfeoe.ui.screens.login.LoginScreen
 
 @Composable
 fun AppNavigation() {
+
     val navController = rememberNavController()
 
-    val startDestination = if (!SessionManager.getToken().isNullOrEmpty()) {
-        AppRoutes.Main.route
-    } else {
-        AppRoutes.Login.route
-    }
+    val startDestination =
+        if (!SessionManager.getToken().isNullOrEmpty()) {
+            AppRoutes.Main.route
+        } else {
+            AppRoutes.Login.route
+        }
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
 
-        // 🔐 LOGIN
+        // LOGIN
         composable(AppRoutes.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(AppRoutes.Main.route) {
-                        popUpTo(AppRoutes.Login.route) { inclusive = true }
+                        popUpTo(AppRoutes.Login.route) {
+                            inclusive = true
+                        }
                     }
                 }
             )
         }
 
-        // 🏠 CONTENEDOR PRINCIPAL
+        // MAIN
         composable(AppRoutes.Main.route) {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+                    SessionManager.clearSession()
+
+                    navController.navigate(AppRoutes.Login.route) {
+                        popUpTo(AppRoutes.Main.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
     }
 }

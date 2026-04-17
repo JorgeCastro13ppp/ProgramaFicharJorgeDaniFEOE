@@ -71,4 +71,8 @@ object SessionManager {
     fun clearSession() {
         edit { it.clear() }
     }
+
+    fun logout() {
+        clearSession()
+    }
 }
