@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.OpenInNew
@@ -34,10 +32,6 @@ import androidx.navigation.NavController
 import com.example.programaficharfeoe.data.model.Documento
 import com.example.programaficharfeoe.viewmodel.DocumentosViewModel
 
-/* ===================================================== */
-/* ================= MENU DOCUMENTOS =================== */
-/* ===================================================== */
-
 @Composable
 fun DocumentosMenuScreen(navController: NavController) {
 
@@ -47,7 +41,7 @@ fun DocumentosMenuScreen(navController: NavController) {
             .padding(16.dp)
     ) {
 
-        PremiumHeader()
+        Header()
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -97,7 +91,7 @@ fun DocumentosMenuScreen(navController: NavController) {
 }
 
 @Composable
-fun PremiumHeader() {
+fun Header() {
 
     // HEADER
     Card(
@@ -213,9 +207,8 @@ fun CategoriaCard(
     }
 }
 
-/* ===================================================== */
-/* ================= LISTADO DOCUMENTOS ================= */
-/* ===================================================== */
+
+// Listado documentos
 
 @Composable
 fun DocumentosScreen(
@@ -272,7 +265,7 @@ fun DocumentosScreen(
                 ) {
                     items(docs.sortedByDescending { it.id }) { doc ->
 
-                        DocumentoPremiumItem(
+                        DocumentoItem(
                             doc = doc,
                             onClick = {
                                 try {
@@ -345,7 +338,7 @@ fun PremiumHeaderListado(titulo: String) {
 }
 
 @Composable
-fun DocumentoPremiumItem(
+fun DocumentoItem(
     doc: Documento,
     onClick: () -> Unit
 ) {

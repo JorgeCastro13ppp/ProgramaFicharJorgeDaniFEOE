@@ -2,7 +2,6 @@ package com.example.programaficharfeoe.data.repository
 
 import com.example.programaficharfeoe.data.model.Vacacion
 import com.example.programaficharfeoe.data.model.VacacionesRequest
-import com.example.programaficharfeoe.data.model.VacacionesResumenResponse
 import com.example.programaficharfeoe.data.remote.ApiService
 
 class VacacionesRepository(private val api: ApiService) {
@@ -20,10 +19,5 @@ class VacacionesRepository(private val api: ApiService) {
             api.solicitarVacaciones(
                 VacacionesRequest(fechaInicio, fechaFin)
             )
-        }
-
-    suspend fun getVacacionesResumen(userId: Int): Result<VacacionesResumenResponse> =
-        runCatching {
-            api.getVacacionesResumen()
         }
 }

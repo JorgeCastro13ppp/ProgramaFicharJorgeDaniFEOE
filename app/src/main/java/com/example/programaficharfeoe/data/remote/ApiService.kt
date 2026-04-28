@@ -1,7 +1,6 @@
 package com.example.programaficharfeoe.data.remote
 
 import com.example.programaficharfeoe.data.model.*
-import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
@@ -27,16 +26,6 @@ interface ApiService {
         @Body request: VacacionesRequest
     ): MessageResponse
 
-    @POST("fichar")
-    suspend fun ficharSimple(
-        @Body request: FichajeRequest
-    ): MessageResponse
-
-    @GET("fichajes")
-    suspend fun getFichajes(
-        @Query("userId") userId: Int
-    ): List<Fichaje>
-
     @POST("fichajes-eventos")
     suspend fun ficharEvento(
         @Body request: FichajeEventoRequest
@@ -46,11 +35,6 @@ interface ApiService {
     suspend fun getFichajesDelDia(
         @Path("userId") userId: Int
     ): List<Fichaje>
-
-    @GET("fichajes-eventos/ultimo/{userId}")
-    suspend fun getUltimoFichaje(
-        @Path("userId") userId: Int
-    ): Fichaje
 
     @GET("fichajes-eventos/estado/{userId}")
     suspend fun getEstadoActual(

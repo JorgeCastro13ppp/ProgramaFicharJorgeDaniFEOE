@@ -13,7 +13,7 @@ class DashboardViewModel : ViewModel() {
     private val fichajeRepo = AppModule.fichajeRepository
     private val api = AppModule.api
 
-    // 🔹 ESTADO
+    // ESTADO
     var estadoActual by mutableStateOf<String?>(null)
         private set
 
@@ -40,7 +40,7 @@ class DashboardViewModel : ViewModel() {
     var error by mutableStateOf<String?>(null)
         private set
 
-    // 🚀 CARGA DASHBOARD
+    // CARGA DASHBOARD
     fun cargarDashboard(userId: Int) {
 
         viewModelScope.launch {
@@ -50,7 +50,7 @@ class DashboardViewModel : ViewModel() {
 
             try {
 
-                // 🔹 ESTADO ACTUAL
+                // ESTADO ACTUAL
                 fichajeRepo.getEstadoActual(userId)
                     .onSuccess {
                         estadoActual = it.estado
@@ -59,7 +59,7 @@ class DashboardViewModel : ViewModel() {
                         error = it.message
                     }
 
-                // 🔹 ACCIONES DISPONIBLES
+                // ACCIONES DISPONIBLES
                 fichajeRepo.getSiguientesAcciones(userId)
                     .onSuccess { response ->
 
@@ -72,7 +72,7 @@ class DashboardViewModel : ViewModel() {
                         error = it.message
                     }
 
-                // 🔹 FICHAJES DE HOY
+                // FICHAJES DE HOY
                 fichajeRepo.getFichajesDelDia(userId)
                     .onSuccess { lista ->
 
@@ -83,7 +83,7 @@ class DashboardViewModel : ViewModel() {
                         error = it.message
                     }
 
-                // 🔹 HORAS HOY (MILISEGUNDOS)
+                // HORAS HOY (MILISEGUNDOS)
                 try {
                     val response = api.getHorasHoy(userId)
 

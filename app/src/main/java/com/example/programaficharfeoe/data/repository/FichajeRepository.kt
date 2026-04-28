@@ -25,10 +25,5 @@ class FichajeRepository(private val api: ApiService) {
             api.ficharEvento(request)
         }
 
-    suspend fun getHorasHoy(userId: Int): Result<HorasResponse> =
-        runCatching {
-            api.getHorasHoy(userId)
-        }
-
 
 }

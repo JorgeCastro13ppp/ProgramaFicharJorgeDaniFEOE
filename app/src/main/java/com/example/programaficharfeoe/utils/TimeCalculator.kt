@@ -9,16 +9,6 @@ fun normalizarTimestamp(timestamp: Long): String {
     return formato.format(Date(timestamp))
 }
 
-fun formatMillis(ms: Long?): String {
-    if (ms == null) return "--"
-
-    val totalMin = ms / 60000
-    val horas = totalMin / 60
-    val minutos = totalMin % 60
-
-    return "${horas}h ${minutos}min"
-}
-
 fun getEstadoColor(estado: String?): Color {
     return when (estado) {
         "EN_TALLER", "EN_OBRA", "EN_REPARACION" -> Color(0xFF22C55E) // verde

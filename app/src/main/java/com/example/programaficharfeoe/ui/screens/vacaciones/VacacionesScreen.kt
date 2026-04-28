@@ -345,26 +345,6 @@ fun VacacionesScreen(
     }
 }
 
-@Composable
-fun ResumenBox(
-    titulo: String,
-    valor: String
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            titulo,
-            style = MaterialTheme.typography.bodySmall
-        )
-        Text(
-            valor,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerField(
@@ -411,7 +391,6 @@ fun DatePickerField(
 
         DatePickerDialog(
             onDismissRequest = {
-                showDialog = false
             },
 
             confirmButton = {
@@ -437,8 +416,6 @@ fun DatePickerField(
 
                             onDateSelected(fecha)
                         }
-
-                        showDialog = false
                     }
                 ) {
                     Text("OK")
@@ -448,7 +425,6 @@ fun DatePickerField(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDialog = false
                     }
                 ) {
                     Text("Cancelar")

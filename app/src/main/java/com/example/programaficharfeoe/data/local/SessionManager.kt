@@ -64,15 +64,7 @@ object SessionManager {
         return if (id == -1) null else id
     }
 
-    fun isLoggedIn(): Boolean {
-        return !getToken().isNullOrEmpty()
-    }
-
     fun clearSession() {
         edit { it.clear() }
-    }
-
-    fun logout() {
-        clearSession()
     }
 }

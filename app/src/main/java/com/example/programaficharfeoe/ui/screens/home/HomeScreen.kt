@@ -44,7 +44,7 @@ fun HomeScreen(
 
     val estadoColor = getEstadoColor(estado)
 
-    // 🔥 PULL REFRESH
+    // PULL REFRESH
     val pullRefreshState = rememberPullRefreshState(
         refreshing = cargando,
         onRefresh = {
@@ -67,7 +67,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // 🟢 ESTADO
+            // ESTADO
             item {
                 val isDark = isSystemInDarkTheme()
 
@@ -109,7 +109,7 @@ fun HomeScreen(
                 }
             }
 
-            // 🌴 VACACIONES PRO
+            // VACACIONES
             item {
                 VacacionesCard(
                     restantes = diasRestantes,
@@ -153,7 +153,7 @@ fun HomeScreen(
             }
         }
 
-        // 🔥 INDICADOR ARRIBA
+        // INDICADOR ARRIBA
         PullRefreshIndicator(
             refreshing = cargando,
             state = pullRefreshState,

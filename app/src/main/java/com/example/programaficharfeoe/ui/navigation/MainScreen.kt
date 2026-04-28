@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -182,7 +181,6 @@ fun MainScreen(
                         )
                     },
                     onClick = {
-                        mostrarLogoutDialog = true
                     },
                     modifier = Modifier.padding(
                         horizontal = 12.dp,
