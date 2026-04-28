@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.ui.screens.home.VacacionesCard
+import com.example.programaficharfeoe.viewmodel.DashboardViewModel
 import com.example.programaficharfeoe.viewmodel.VacacionesViewModel
 import java.util.Calendar
 
@@ -30,6 +33,7 @@ fun VacacionesScreen(
     viewModel: VacacionesViewModel = viewModel()
 ) {
 
+    val dashboardViewModel: DashboardViewModel = viewModel()
     val vacaciones = viewModel.vacaciones
     val isLoading = viewModel.isLoading
     val error = viewModel.error
@@ -40,8 +44,16 @@ fun VacacionesScreen(
     var fechaFin by remember { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
 
+    val diasRestantes = dashboardViewModel.diasVacacionesRestantes
+    val diasLibres = dashboardViewModel.diasLibresRestantes
+    val diasNavidad = dashboardViewModel.diasNavidadRestantes
+
     LaunchedEffect(Unit) {
         viewModel.cargarVacaciones()
+
+        SessionManager.getUserId()?.let {
+            dashboardViewModel.cargarDashboard(it)
+        }
     }
 
     fun validarFechas(
@@ -131,25 +143,11 @@ fun VacacionesScreen(
 
         // RESUMEN
         item {
-
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    ResumenBox("Disponibles", "18")
-                    ResumenBox("Pendientes", "2")
-                    ResumenBox("Usados", "10")
-                }
-            }
+            VacacionesCard(
+                restantes = diasRestantes,
+                libresRestantes = diasLibres,
+                navidadRestantes = diasNavidad
+            )
         }
 
         // SOLICITUD

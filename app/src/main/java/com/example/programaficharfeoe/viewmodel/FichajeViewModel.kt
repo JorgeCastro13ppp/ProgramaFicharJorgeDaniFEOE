@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.location.LocationService
 import com.example.programaficharfeoe.data.model.*
 import com.example.programaficharfeoe.di.AppModule
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 class FichajeViewModel : ViewModel() {
@@ -29,16 +30,10 @@ class FichajeViewModel : ViewModel() {
     var cargando by mutableStateOf(false)
         private set
 
-    var accionesTaller by mutableStateOf<List<String>>(emptyList())
-        private set
-
-    var accionesObra by mutableStateOf<List<String>>(emptyList())
-        private set
-
-    var accionesReparacion by mutableStateOf<List<String>>(emptyList())
-        private set
-
     var mensaje by mutableStateOf<String?>(null)
+
+    var accionesDisponibles by mutableStateOf<List<String>>(emptyList())
+        private set
 
     fun limpiarMensaje() {
         mensaje = null
@@ -49,7 +44,6 @@ class FichajeViewModel : ViewModel() {
             cargando = true
             try {
                 val fichajesResult = repo.getFichajesDelDia(userId)
-                val estadoResult = repo.getEstadoActual(userId)
                 val accionesResult = repo.getSiguientesAcciones(userId)
 
                 fichajesResult.onSuccess { fichajes ->
@@ -69,15 +63,13 @@ class FichajeViewModel : ViewModel() {
                     ultimaAccion = fichajesLocales.lastOrNull()?.tipo
                 }
 
-                estadoResult.onSuccess {
-                    estadoActual = it.estado
-                }
-
                 accionesResult.onSuccess { response ->
                     estadoActual = response.estado
-                    accionesTaller = response.accionesTaller
-                    accionesObra = response.accionesObra
-                    accionesReparacion = response.accionesReparacion
+
+                    accionesDisponibles =
+                        response.accionesTaller +
+                                response.accionesObra +
+                                response.accionesReparacion
                 }
 
                 accionesResult.onFailure {
@@ -94,78 +86,48 @@ class FichajeViewModel : ViewModel() {
         }
     }
 
-    fun puedeFichar(
-        accion: String,
-        contextoSeleccionado: String
-    ): Boolean {
-        val accionBase = accion.uppercase()
-        val contexto = contextoSeleccionado.uppercase()
-
-        val accionBackend = when (accionBase) {
-            "ENTRADA" -> "ENTRADA_$contexto"
-            "SALIDA" -> "SALIDA_$contexto"
-            "INICIO_VIAJE" -> "INICIO_VIAJE_$contexto"
-            "FIN_VIAJE" -> "FIN_VIAJE_$contexto"
-            "INICIO_DESCANSO" -> "INICIO_DESCANSO_$contexto"
-            "FIN_DESCANSO" -> "FIN_DESCANSO_$contexto"
-            else -> return false
-        }
-
-        val accionesContexto = when (contexto) {
-            "TALLER" -> accionesTaller
-            "OBRA" -> accionesObra
-            "REPARACION" -> accionesReparacion
-            else -> emptyList()
-        }
-
-        return accionesContexto.contains(accionBackend)
-    }
-
     fun fichar(
         context: Context,
         userId: Int,
-        contexto: String,
-        accion: String
+        accionCompleta: String
     ) {
         viewModelScope.launch {
             try {
+
                 val location = LocationService(context).getLastLocation()
+
+                val accionBase = accionCompleta.substringBeforeLast("_")
+                val contexto = accionCompleta.substringAfterLast("_")
 
                 val request = FichajeEventoRequest(
                     userId = userId,
-                    timestamp = System.currentTimeMillis(),
-                    contexto = contexto.uppercase(),
-                    accion = accion.uppercase(),
+                    timestamp = System.currentTimeMillis(), // ✅ milisegundos
+                    contexto = contexto,                    // "TALLER"
+                    accion = accionBase,                    // "ENTRADA"
                     latitud = location?.latitude ?: 0.0,
                     longitud = location?.longitude ?: 0.0,
-                    accuracy = location?.accuracy ?: 0.0
+                    accuracy = (location?.accuracy ?: 0f).toDouble()
                 )
 
-                repo.fichar(request)
-                cargarDatos(userId)
-                mensaje = "Fichaje registrado correctamente"
+                Log.d("FICHAJE", "REQUEST JSON:")
+                Log.d("FICHAJE", request.toString())
+                Log.d("FICHAJE_JSON", Gson().toJson(request))
+
+                val result = repo.fichar(request)
+
+                result.onSuccess {
+                    mensaje = "Fichaje registrado correctamente"
+                    cargarDatos(userId)
+                }
+
+                result.onFailure {
+                    mensaje = it.message ?: "Error al fichar"
+                }
 
             } catch (e: Exception) {
-                mensaje = e.message ?: "Error al fichar"
-                Log.e("FICHAJE", "Error al fichar", e)
+                mensaje = "Error inesperado"
             }
         }
     }
 
-    fun obtenerAccionesDisponibles(): List<Pair<String, String>> {
-        val acciones = mutableListOf<Pair<String, String>>()
-
-        fun procesar(lista: List<String>, contexto: String) {
-            lista.forEach { accionCompleta ->
-                val accion = accionCompleta.substringBeforeLast("_")
-                acciones.add(accion to contexto)
-            }
-        }
-
-        procesar(accionesTaller, "TALLER")
-        procesar(accionesObra, "OBRA")
-        procesar(accionesReparacion, "REPARACION")
-
-        return acciones
-    }
 }

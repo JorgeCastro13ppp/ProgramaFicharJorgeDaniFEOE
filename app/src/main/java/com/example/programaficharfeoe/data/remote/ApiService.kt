@@ -52,11 +52,6 @@ interface ApiService {
         @Path("userId") userId: Int
     ): Fichaje
 
-    @POST("fichajes-eventos")
-    suspend fun fichar(
-        @Body request: FichajeEventoRequest
-    ): FichajeEventoResponse
-
     @GET("fichajes-eventos/estado/{userId}")
     suspend fun getEstadoActual(
         @Path("userId") userId: Int
@@ -66,4 +61,10 @@ interface ApiService {
     suspend fun getSiguientesAcciones(
         @Path("userId") userId: Int
     ): SiguientesAccionesResponse
+
+    @GET("horas/hoy/{userId}")
+    suspend fun getHorasHoy(@Path("userId") userId: Int): HorasResponse
+
+    @GET("vacaciones/resumen")
+    suspend fun getVacacionesResumen(): VacacionesResumenResponse
 }

@@ -40,7 +40,7 @@ object RetrofitInstance {
         Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create()) // 👈 CLAVE
             .build()
     }
 

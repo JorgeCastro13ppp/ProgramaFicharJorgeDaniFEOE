@@ -5,7 +5,7 @@ import com.example.programaficharfeoe.data.repository.*
 
 object AppModule {
 
-    private val api = RetrofitInstance.api
+    val api = RetrofitInstance.api
 
     val authRepository by lazy { AuthRepository(api) }
     val documentoRepository by lazy { DocumentoRepository(api) }

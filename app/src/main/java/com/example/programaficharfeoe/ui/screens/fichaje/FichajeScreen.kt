@@ -1,6 +1,7 @@
 package com.example.programaficharfeoe.ui.screens.fichaje
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.BeachAccess
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
@@ -24,40 +26,51 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.data.model.Fichaje
 import com.example.programaficharfeoe.utils.normalizarTimestamp
+import com.example.programaficharfeoe.viewmodel.DashboardViewModel
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
 
 @Composable
 fun FichajeScreen() {
 
     val context = LocalContext.current
-    val viewModel: FichajeViewModel = viewModel()
+    val fichajeViewModel: FichajeViewModel = viewModel()
+    val dashboardViewModel: DashboardViewModel = viewModel()
+
     val userId = SessionManager.getUserId()
 
-    if (userId == null) return
+    if (userId == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Usuario no autenticado")
+        }
+        return
+    }
 
-    val fichajes = viewModel.fichajesLocales
-    val cargando = viewModel.cargando
-    val acciones = viewModel.obtenerAccionesDisponibles()
+    val accionesDisponibles = fichajeViewModel.accionesDisponibles
+    val fichajes = fichajeViewModel.fichajesLocales
+    val cargando = fichajeViewModel.cargando
 
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) {}
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
+    // 🔥 CARGA GLOBAL
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        viewModel.cargarDatos(userId)
+        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        dashboardViewModel.cargarDashboard(userId)
+        fichajeViewModel.cargarDatos(userId)
     }
 
     if (cargando) {
         Box(
-            Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator()
@@ -65,33 +78,41 @@ fun FichajeScreen() {
         return
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(16.dp)
     ) {
 
-        item {
-
-            // HEADER
-            Card(
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color(0xFF1E3A8A),
-                                    Color(0xFF2563EB)
-                                )
+        // HEADER
+        Card(
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF1E3A8A),
+                                Color(0xFF2563EB)
                             )
                         )
-                        .padding(20.dp)
+                    )
+                    .padding(20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    Icon(
+                        Icons.Default.AccessTime,
+                        null,
+                        tint = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
                     Column {
 
                         Text(
@@ -101,10 +122,8 @@ fun FichajeScreen() {
                             fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
                         Text(
-                            "Acciones disponibles en este momento",
+                            "Acciones disponibles",
                             color = Color.White.copy(alpha = 0.9f)
                         )
                     }
@@ -112,112 +131,101 @@ fun FichajeScreen() {
             }
         }
 
-        // BOTONES ACCIONES
-        items(acciones) { (accion, contexto) ->
+        Spacer(modifier = Modifier.height(12.dp))
 
-            val colorBoton = when (accion) {
-                "ENTRADA" -> Color(0xFF22C55E)
-                "SALIDA" -> Color(0xFFEF4444)
-                "INICIO_VIAJE", "FIN_VIAJE" -> Color(0xFF3B82F6)
-                "INICIO_DESCANSO", "FIN_DESCANSO" -> Color(0xFFF59E0B)
-                else -> MaterialTheme.colorScheme.primary
-            }
+        if (accionesDisponibles.isEmpty()) {
+            Text("No hay acciones disponibles ahora mismo")
+        } else {
 
-            val icono = when (accion) {
-                "ENTRADA" -> Icons.Default.Login
-                "SALIDA" -> Icons.Default.Logout
-                "INICIO_VIAJE", "FIN_VIAJE" -> Icons.Default.DirectionsCar
-                else -> Icons.Default.Coffee
-            }
+            accionesDisponibles.forEach { accionCompleta ->
 
-            Button(
-                onClick = {
-                    viewModel.fichar(
-                        context,
-                        userId,
-                        contexto,
-                        accion
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorBoton
-                )
-            ) {
+                val texto = accionCompleta.replace("_", " ")
 
-                Icon(icono, null)
+                val color = when {
+                    accionCompleta.startsWith("ENTRADA") -> Color(0xFF22C55E)
+                    accionCompleta.startsWith("SALIDA") -> Color(0xFFEF4444)
+                    accionCompleta.contains("DESCANSO") -> Color(0xFFF59E0B)
+                    accionCompleta.contains("VIAJE") -> Color(0xFF3B82F6)
+                    else -> MaterialTheme.colorScheme.primary
+                }
 
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = "${accion.replace("_", " ")} - $contexto",
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        item {
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "Registros de hoy",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        if (fichajes.isEmpty()) {
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                Button(
+                    onClick = {
+                        fichajeViewModel.fichar(
+                            context,
+                            userId,
+                            accionCompleta
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = color
                     )
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("No hay registros hoy")
+                    Text(texto)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 🔹 REGISTROS DEL DÍA
+        Text(
+            text = "Registros de hoy",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+
+            if (fichajes.isEmpty()) {
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No hay registros hoy")
+                }
+
+            } else {
+
+                LazyColumn(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+
+                    items(fichajes.sortedByDescending { it.fechaHora }) { fichaje ->
+                        RegistroItem(fichaje)
+                        HorizontalDivider()
                     }
                 }
             }
-
-        } else {
-
-            items(
-                fichajes.sortedByDescending { it.fechaHora }
-            ) { fichaje ->
-
-                RegistroPremiumItem(fichaje)
-            }
         }
     }
-
-    viewModel.mensaje?.let {
-        LaunchedEffect(it) {
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_SHORT
-            ).show()
-
-            viewModel.limpiarMensaje()
+    // 🔹 MENSAJES
+    fichajeViewModel.mensaje?.let { mensaje ->
+        LaunchedEffect(mensaje) {
+            Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+            fichajeViewModel.limpiarMensaje()
         }
     }
 }
 
 @Composable
-fun RegistroPremiumItem(
+fun RegistroItem(
     fichaje: Fichaje
 ) {
 

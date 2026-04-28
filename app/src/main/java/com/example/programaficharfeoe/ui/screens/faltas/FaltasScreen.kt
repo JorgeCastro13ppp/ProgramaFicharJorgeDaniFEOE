@@ -1,6 +1,7 @@
 package com.example.programaficharfeoe.ui.screens.faltas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.programaficharfeoe.data.model.Falta
 import com.example.programaficharfeoe.viewmodel.FaltasViewModel
 
 @Composable
@@ -35,232 +37,102 @@ fun FaltasScreen(
     val faltas = viewModel.faltas
     val cargando = viewModel.isLoading
 
-    Column(
+    val justificadas = faltas.count { it.tipo.equals("JUSTIFICADA", true) }
+    val retrasos = faltas.count { it.tipo.equals("RETRASO", true) }
+    val injustificadas = faltas.count { it.tipo.equals("INJUSTIFICADA", true) }
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        Card(
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color(0xFF1E3A8A),
-                                Color(0xFF2563EB)
+        // 🔵 HEADER
+        item {
+            Card(shape = RoundedCornerShape(24.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFF1E3A8A),
+                                    Color(0xFF2563EB)
+                                )
                             )
                         )
-                    )
-                    .padding(20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(20.dp)
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
 
-                    Icon(
-                        Icons.Default.EventBusy,
-                        null,
-                        tint = Color.White
-                    )
+                        Icon(Icons.Default.EventBusy, null, tint = Color.White)
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
 
-                    Column {
+                        Column {
+                            Text(
+                                "Faltas",
+                                color = Color.White,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                        Text(
-                            "Faltas",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            "Consulta incidencias y ausencias",
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
+                            Text(
+                                "Incidencias y ausencias",
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        // 📊 RESUMEN PRO
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
 
-        // RESUMEN
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-
-            ResumenCard(
-                titulo = "Total",
-                valor = faltas.size.toString(),
-                modifier = Modifier.weight(1f)
-            )
-
-            ResumenCard(
-                titulo = "Justificadas",
-                valor = faltas.count {
-                    it.tipo.contains(
-                        "just",
-                        true
-                    )
-                }.toString(),
-                modifier = Modifier.weight(1f)
-            )
-
-            ResumenCard(
-                titulo = "Pendientes",
-                valor = faltas.count {
-                    it.tipo.contains(
-                        "pend",
-                        true
-                    )
-                }.toString(),
-                modifier = Modifier.weight(1f)
-            )
+                ResumenPro("Justificadas", justificadas, Color(0xFF22C55E), Modifier.weight(1f))
+                ResumenPro("Retrasos", retrasos, Color(0xFFF59E0B), Modifier.weight(1f))
+                ResumenPro("Injustificadas", injustificadas, Color(0xFFEF4444), Modifier.weight(1f))
+            }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Text(
-            text = "Historial",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
+        // 📋 HISTORIAL
+        item {
+            Text(
+                "Historial",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         when {
 
             cargando -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
 
             faltas.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No hay faltas registradas"
-                    )
+                item {
+                    EmptyFaltasState()
                 }
             }
 
             else -> {
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-
-                    items(faltas) { falta ->
-
-                        val colorEstado =
-                            when {
-                                falta.tipo.contains(
-                                    "just",
-                                    true
-                                ) -> Color(0xFF22C55E)
-
-                                falta.tipo.contains(
-                                    "pend",
-                                    true
-                                ) -> Color(0xFFF59E0B)
-
-                                else -> Color(0xFFEF4444)
-                            }
-
-                        val icono =
-                            when {
-                                falta.tipo.contains(
-                                    "just",
-                                    true
-                                ) -> Icons.Default.WorkOff
-
-                                falta.tipo.contains(
-                                    "pend",
-                                    true
-                                ) -> Icons.Default.WarningAmber
-
-                                else -> Icons.Default.EventBusy
-                            }
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor =
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(
-                                        alpha = 0.45f
-                                    )
-                            )
-                        ) {
-
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .background(
-                                            colorEstado.copy(alpha = 0.14f),
-                                            CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        icono,
-                                        null,
-                                        tint = colorEstado
-                                    )
-                                }
-
-                                Spacer(
-                                    modifier = Modifier.width(14.dp)
-                                )
-
-                                Column(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-
-                                    Text(
-                                        text = falta.fecha,
-                                        fontWeight = FontWeight.Bold
-                                    )
-
-                                    Spacer(
-                                        modifier = Modifier.height(4.dp)
-                                    )
-
-                                    Text(
-                                        text = falta.descripcion
-                                    )
-
-                                    Spacer(
-                                        modifier = Modifier.height(6.dp)
-                                    )
-
-                                    Text(
-                                        text = falta.tipo.uppercase(),
-                                        color = colorEstado,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
+                items(faltas.sortedByDescending { it.fecha }) { falta ->
+                    FaltaItem(falta)
                 }
             }
         }
@@ -268,38 +140,135 @@ fun FaltasScreen(
 }
 
 @Composable
-fun ResumenCard(
+fun ResumenPro(
     titulo: String,
-    valor: String,
+    valor: Int,
+    color: Color,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor =
-                MaterialTheme.colorScheme.surfaceVariant.copy(
-                    alpha = 0.45f
-                )
+            containerColor = if (isDark)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDark) 0.dp else 4.dp
         )
     ) {
-
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier
+                .padding(14.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.bodySmall
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(color, CircleShape)
             )
 
-            Text(
-                text = valor,
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(valor.toString(),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
+
+            Text(
+                titulo,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
+    }
+}
+
+@Composable
+fun FaltaItem(falta: Falta) {
+
+    val tipo = falta.tipo.uppercase()
+
+    val (color, icono) = when (tipo) {
+        "JUSTIFICADA" -> Color(0xFF22C55E) to Icons.Default.WorkOff
+        "RETRASO" -> Color(0xFFF59E0B) to Icons.Default.WarningAmber
+        "INJUSTIFICADA" -> Color(0xFFEF4444) to Icons.Default.EventBusy
+        else -> Color(0xFFEF4444) to Icons.Default.EventBusy
+    }
+
+    val isDark = isSystemInDarkTheme()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDark) 0.dp else 3.dp
+        )
+    ) {
+
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(color.copy(alpha = 0.15f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icono, null, tint = color)
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+
+                Text(
+                    falta.fecha,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(falta.descripcion)
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = when (tipo) {
+                        "JUSTIFICADA" -> "Justificada"
+                        "RETRASO" -> "Retraso"
+                        "INJUSTIFICADA" -> "Injustificada"
+                        else -> tipo
+                    },
+                    color = color,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyFaltasState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(40.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("No tienes faltas registradas 🎉")
     }
 }

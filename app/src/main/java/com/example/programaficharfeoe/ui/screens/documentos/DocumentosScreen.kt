@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.OpenInNew
@@ -98,8 +99,8 @@ fun DocumentosMenuScreen(navController: NavController) {
 @Composable
 fun PremiumHeader() {
 
+    // HEADER
     Card(
-        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp)
     ) {
         Box(
@@ -115,20 +116,32 @@ fun PremiumHeader() {
                 )
                 .padding(20.dp)
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-            Column {
-
-                Text(
-                    text = "Documentos",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    Icons.Default.Description,
+                    null,
+                    tint = Color.White
                 )
 
-                Text(
-                    text = "Accede y descarga tus archivos",
-                    color = Color.White.copy(alpha = 0.90f)
-                )
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column {
+
+                    Text(
+                        "Documentos",
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        "Accede y descarga tus archivos",
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
             }
         }
     }
@@ -149,7 +162,7 @@ fun CategoriaCard(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -263,6 +276,7 @@ fun DocumentosScreen(
                             doc = doc,
                             onClick = {
                                 try {
+
                                     val intent = Intent(
                                         Intent.ACTION_VIEW,
                                         Uri.parse(doc.downloadUrl)
@@ -350,7 +364,7 @@ fun DocumentoPremiumItem(
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
 

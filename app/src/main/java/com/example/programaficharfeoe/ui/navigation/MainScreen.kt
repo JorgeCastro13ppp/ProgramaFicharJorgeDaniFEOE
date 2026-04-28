@@ -4,11 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +19,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.ui.screens.documentos.DocumentosMenuScreen
@@ -27,13 +33,18 @@ import com.example.programaficharfeoe.ui.screens.home.HomeScreen
 import com.example.programaficharfeoe.ui.screens.perfil.CambiarPasswordScreen
 import com.example.programaficharfeoe.ui.screens.perfil.MiCuentaScreen
 import com.example.programaficharfeoe.ui.screens.vacaciones.VacacionesScreen
+import com.example.programaficharfeoe.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
     onLogout: () -> Unit
 ) {
+
+    val dashboardViewModel: DashboardViewModel = viewModel()
+    val userId = SessionManager.getUserId()
 
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(
@@ -223,23 +234,20 @@ fun MainScreen(
             ) {
 
                 composable(BottomNavItem.Home.route) {
-                    HomeScreen(
-                        onIrFichaje = {
-                            navController.navigate(
-                                BottomNavItem.Fichaje.route
-                            )
-                        },
-                        onIrVacaciones = {
-                            navController.navigate(
-                                BottomNavItem.Vacaciones.route
-                            )
-                        },
-                        onIrDocumentos = {
-                            navController.navigate(
-                                BottomNavItem.Documentos.route
-                            )
+
+                    val lifecycleOwner = LocalLifecycleOwner.current
+
+                    LaunchedEffect(lifecycleOwner) {
+                        lifecycleOwner.lifecycle.repeatOnLifecycle(
+                            Lifecycle.State.RESUMED
+                        ) {
+                            userId?.let {
+                                dashboardViewModel.cargarDashboard(it)
+                            }
                         }
-                    )
+                    }
+
+                    HomeScreen(dashboardViewModel)
                 }
 
                 composable(BottomNavItem.Fichaje.route) {
