@@ -10,6 +10,17 @@ object SessionManager {
     private const val KEY_USERNAME = "username"
     private const val KEY_USER_ID = "user_id"
 
+    private const val KEY_FCM_TOKEN = "fcm_token"
+
+    fun saveFcmToken(token: String) {
+        edit { it.putString(KEY_FCM_TOKEN, token) }
+    }
+
+    fun getFcmToken(): String? {
+        checkInitialization()
+        return prefs.getString(KEY_FCM_TOKEN, null)
+    }
+
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {

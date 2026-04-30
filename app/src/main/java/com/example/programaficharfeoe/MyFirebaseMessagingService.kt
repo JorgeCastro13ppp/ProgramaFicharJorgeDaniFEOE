@@ -10,6 +10,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import java.net.HttpURLConnection
 import java.net.URL
+import android.app.PendingIntent
+import android.content.Intent
 
 class MyFirebaseMessagingService :
     FirebaseMessagingService() {
@@ -19,10 +21,12 @@ class MyFirebaseMessagingService :
         Log.d("FCM_DEBUG", "MENSAJE RECIBIDO COMPLETO")
 
         val title =
-            remoteMessage.data["title"] ?: ""
+            remoteMessage.data["title"]
+                ?: remoteMessage.notification?.title ?: ""
 
         val body =
-            remoteMessage.data["body"] ?: ""
+            remoteMessage.data["body"]
+                ?: remoteMessage.notification?.body ?: ""
 
         Log.d("FCM_DEBUG", "Título: $title")
         Log.d("FCM_DEBUG", "Mensaje: $body")
@@ -35,14 +39,22 @@ class MyFirebaseMessagingService :
 
         Log.d("FCM", "Nuevo token: $token")
 
-        enviarTokenAlBackend(token)
+        // 🔹 GUARDAR SIEMPRE EL TOKEN
+        SessionManager.saveFcmToken(token)
+
+        // 🔹 SI HAY SESIÓN → enviarlo
+        val jwt = SessionManager.getToken()
+
+        if (jwt != null) {
+            enviarTokenAlBackend(token, jwt)
+        }
     }
 
 
-    private fun enviarTokenAlBackend(token: String) {
-
-        val jwt = SessionManager.getToken() ?: return
-
+    private fun enviarTokenAlBackend(
+        token: String,
+        jwt: String
+    ) {
         val body =
             """
             {
@@ -102,6 +114,15 @@ class MyFirebaseMessagingService :
             getSystemService(NOTIFICATION_SERVICE)
                     as NotificationManager
 
+        val intent = Intent(this, MainActivity::class.java)
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
@@ -121,6 +142,8 @@ class MyFirebaseMessagingService :
                 .setContentText(message)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
                 .build()
 
 
