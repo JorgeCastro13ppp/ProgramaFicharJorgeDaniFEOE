@@ -22,6 +22,14 @@ class MainActivity : ComponentActivity() {
 
         SessionManager.init(this)
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+
+            requestPermissions(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                1
+            )
+        }
+
         setContent {
 
             ProgramaFicharFEOETheme {
