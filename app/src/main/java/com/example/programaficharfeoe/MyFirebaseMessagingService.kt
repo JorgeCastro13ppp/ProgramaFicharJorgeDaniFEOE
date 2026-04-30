@@ -1,57 +1,47 @@
 package com.example.programaficharfeoe
 
-import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import com.example.programaficharfeoe.data.local.SessionManager
-import com.example.programaficharfeoe.ui.navigation.AppNavigation
-import com.example.programaficharfeoe.ui.theme.ProgramaFicharFEOETheme
-import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 import java.net.HttpURLConnection
 import java.net.URL
 
-class MainActivity : ComponentActivity() {
+class MyFirebaseMessagingService :
+    FirebaseMessagingService() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-
-        super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge()
-
-        SessionManager.init(this)
-
-        setContent {
-
-            ProgramaFicharFEOETheme {
-
-                AppNavigation()
-            }
-        }
-
-        enviarTokenSiExisteSesion()
-    }
-
-    private fun enviarTokenSiExisteSesion() {
-
-        val jwt = SessionManager.getToken() ?: return
-
-        FirebaseMessaging
-            .getInstance()
-            .token
-            .addOnSuccessListener { token ->
-
-                Log.d("FCM", "Token actual: $token")
-
-                enviarTokenAlBackend(token, jwt)
-            }
-    }
-
-    private fun enviarTokenAlBackend(
-        token: String,
-        jwt: String
+    override fun onMessageReceived(
+        remoteMessage: RemoteMessage
     ) {
+
+        remoteMessage.notification?.let {
+
+            Log.d("FCM", "Título: ${it.title}")
+            Log.d("FCM", "Mensaje: ${it.body}")
+        }
+    }
+
+    override fun onNewToken(token: String) {
+
+        Log.d("FCM", "Nuevo token: $token")
+
+        enviarTokenAlBackend(token)
+    }
+
+    private fun enviarTokenAlBackend(token: String) {
+
+        val jwt =
+            SessionManager.getToken()
+
+        if (jwt == null) {
+
+            Log.d(
+                "FCM",
+                "Token generado pero usuario no logueado aún"
+            )
+
+            return
+        }
 
         val body =
             """
@@ -95,14 +85,14 @@ class MainActivity : ComponentActivity() {
 
                 Log.d(
                     "FCM",
-                    "Token enviado correctamente (MainActivity)"
+                    "Token enviado correctamente al backend"
                 )
 
             } catch (e: Exception) {
 
                 Log.e(
                     "FCM",
-                    "Error enviando token desde MainActivity",
+                    "Error enviando token al backend",
                     e
                 )
             }

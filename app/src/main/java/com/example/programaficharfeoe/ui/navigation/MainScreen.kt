@@ -181,6 +181,7 @@ fun MainScreen(
                         )
                     },
                     onClick = {
+                        mostrarLogoutDialog = true
                     },
                     modifier = Modifier.padding(
                         horizontal = 12.dp,

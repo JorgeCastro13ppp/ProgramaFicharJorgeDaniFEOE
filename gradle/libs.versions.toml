@@ -15,6 +15,7 @@ remoteCreationCore = "1.0.0-alpha07"
 foundation = "1.10.6"
 uiGraphics = "1.10.6"
 ui = "1.10.6"
+firebaseMessagingKtx = "25.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +32,7 @@ androidx-remote-creation-core = { group = "androidx.compose.remote", name = "rem
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
