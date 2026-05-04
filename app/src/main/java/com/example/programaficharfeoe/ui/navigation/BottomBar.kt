@@ -57,18 +57,20 @@ fun BottomBar(navController: NavController) {
 
             items.forEach { item ->
 
-                val selected = currentRoute == item.route
+                val selected = currentRoute?.startsWith(item.route) == true
 
                 NavigationBarItem(
                     selected = selected,
 
                     onClick = {
                         navController.navigate(item.route) {
+
                             popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                                saveState = false
                             }
+
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState = false
                         }
                     },
 

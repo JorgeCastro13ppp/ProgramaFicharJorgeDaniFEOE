@@ -60,7 +60,9 @@ fun DocumentosMenuScreen(navController: NavController) {
                 subtitulo = "Recibos salariales",
                 icono = Icons.Default.PictureAsPdf
             ) {
-                navController.navigate("documentos/nomina/Nóminas")
+                navController.navigate("documentos/nomina/Nóminas") {
+                    launchSingleTop = true
+                }
             }
 
             CategoriaCard(
@@ -68,7 +70,9 @@ fun DocumentosMenuScreen(navController: NavController) {
                 subtitulo = "Equipos de protección",
                 icono = Icons.Default.Security
             ) {
-                navController.navigate("documentos/epis/EPIs")
+                navController.navigate("documentos/epis/EPIs") {
+                    launchSingleTop = true
+                }
             }
 
             CategoriaCard(
@@ -76,7 +80,9 @@ fun DocumentosMenuScreen(navController: NavController) {
                 subtitulo = "Cursos y certificados",
                 icono = Icons.Default.School
             ) {
-                navController.navigate("documentos/formacion/Formación")
+                navController.navigate("documentos/formacion/Formación") {
+                    launchSingleTop = true
+                }
             }
 
             CategoriaCard(
@@ -84,7 +90,9 @@ fun DocumentosMenuScreen(navController: NavController) {
                 subtitulo = "Informes médicos",
                 icono = Icons.Default.Description
             ) {
-                navController.navigate("documentos/reconocimiento/Reconocimientos")
+                navController.navigate("documentos/reconocimiento/Reconocimientos") {
+                    launchSingleTop = true
+                }
             }
         }
     }

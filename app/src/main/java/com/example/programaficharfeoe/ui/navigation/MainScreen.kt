@@ -131,7 +131,10 @@ fun MainScreen(
                         )
                     },
                     onClick = {
-                        navController.navigate("cuenta")
+                        navController.navigate("cuenta") {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
                         scope.launch {
                             drawerState.close()
                         }
