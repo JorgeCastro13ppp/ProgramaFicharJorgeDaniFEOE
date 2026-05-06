@@ -32,6 +32,7 @@ object RetrofitInstance {
         .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .hostnameVerifier { _, _ -> true }
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()

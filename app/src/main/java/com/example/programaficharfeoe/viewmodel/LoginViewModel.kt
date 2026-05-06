@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.di.AppModule
+import com.example.programaficharfeoe.utils.Constants
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,7 +67,7 @@ class LoginViewModel : ViewModel() {
                     try {
 
                         val url =
-                            URL("https://192.168.1.45:8443/device/register")
+                            URL("${Constants.BASE_URL}/device/register")
 
                         val conn =
                             url.openConnection()

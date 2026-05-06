@@ -12,6 +12,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import android.app.PendingIntent
 import android.content.Intent
+import com.example.programaficharfeoe.utils.Constants
 
 class MyFirebaseMessagingService :
     FirebaseMessagingService() {
@@ -68,7 +69,7 @@ class MyFirebaseMessagingService :
             try {
 
                 val url =
-                    URL("https://192.168.1.45:8443/device/register")
+                    URL("${Constants.BASE_URL}/device/register")
 
                 val conn =
                     url.openConnection() as HttpURLConnection
