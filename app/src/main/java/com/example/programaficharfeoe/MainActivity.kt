@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.data.remote.RetrofitInstance
 import com.example.programaficharfeoe.ui.navigation.AppNavigation
 import com.example.programaficharfeoe.ui.theme.ProgramaFicharFEOETheme
 import com.google.firebase.messaging.FirebaseMessaging
@@ -21,6 +22,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         SessionManager.init(this)
+
+        RetrofitInstance.init(this)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
 

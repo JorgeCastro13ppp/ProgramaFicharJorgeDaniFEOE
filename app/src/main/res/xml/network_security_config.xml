@@ -3,8 +3,13 @@
 
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
+
+            <!-- Certificados normales Android -->
             <certificates src="system"/>
-            <certificates src="user"/>
+
+            <!-- Certificado propio -->
+            <certificates src="@raw/mkcert_root"/>
+
         </trust-anchors>
     </base-config>
 
