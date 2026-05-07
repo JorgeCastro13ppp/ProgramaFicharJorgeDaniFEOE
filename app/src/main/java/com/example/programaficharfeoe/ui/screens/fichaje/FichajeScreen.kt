@@ -57,7 +57,7 @@ fun FichajeScreen() {
         ActivityResultContracts.RequestPermission()
     ) { }
 
-    // 🔥 CARGA GLOBAL
+    // CARGA GLOBAL
     LaunchedEffect(Unit) {
         permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         dashboardViewModel.cargarDashboard(userId)
@@ -169,7 +169,7 @@ fun FichajeScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 🔹 REGISTROS DEL DÍA
+        // REGISTROS DEL DÍA
         Text(
             text = "Registros de hoy",
             style = MaterialTheme.typography.titleMedium,
@@ -211,7 +211,7 @@ fun FichajeScreen() {
             }
         }
     }
-    // 🔹 MENSAJES
+    // MENSAJES
     fichajeViewModel.mensaje?.let { mensaje ->
         LaunchedEffect(mensaje) {
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()

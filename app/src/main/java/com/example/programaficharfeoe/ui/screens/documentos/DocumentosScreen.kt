@@ -241,7 +241,7 @@ fun DocumentosScreen(
             .padding(16.dp)
     ) {
 
-        PremiumHeaderListado(titulo)
+        HeaderListado(titulo)
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -307,7 +307,7 @@ fun DocumentosScreen(
 }
 
 @Composable
-fun PremiumHeaderListado(titulo: String) {
+fun HeaderListado(titulo: String) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),

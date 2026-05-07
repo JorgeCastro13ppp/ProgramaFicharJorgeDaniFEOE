@@ -101,7 +101,7 @@ class FichajeViewModel : ViewModel() {
 
                 val request = FichajeEventoRequest(
                     userId = userId,
-                    timestamp = System.currentTimeMillis(), // ✅ milisegundos
+                    timestamp = System.currentTimeMillis(), // milisegundos
                     contexto = contexto,                    // "TALLER"
                     accion = accionBase,                    // "ENTRADA"
                     latitud = location?.latitude ?: 0.0,

@@ -40,10 +40,10 @@ class MyFirebaseMessagingService :
 
         Log.d("FCM", "Nuevo token: $token")
 
-        // 🔹 GUARDAR SIEMPRE EL TOKEN
+        // GUARDAR SIEMPRE EL TOKEN
         SessionManager.saveFcmToken(token)
 
-        // 🔹 SI HAY SESIÓN → enviarlo
+        // SI HAY SESIÓN → enviarlo
         val jwt = SessionManager.getToken()
 
         if (jwt != null) {

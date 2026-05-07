@@ -87,20 +87,20 @@ fun FaltasScreen(
             }
         }
 
-        // 📊 RESUMEN PRO
+        // RESUMEN PRO
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                ResumenPro("Justificadas", justificadas, Color(0xFF22C55E), Modifier.weight(1f))
-                ResumenPro("Retrasos", retrasos, Color(0xFFF59E0B), Modifier.weight(1f))
-                ResumenPro("Injustificadas", injustificadas, Color(0xFFEF4444), Modifier.weight(1f))
+                Resumen("Justificadas", justificadas, Color(0xFF22C55E), Modifier.weight(1f))
+                Resumen("Retrasos", retrasos, Color(0xFFF59E0B), Modifier.weight(1f))
+                Resumen("Injustificadas", injustificadas, Color(0xFFEF4444), Modifier.weight(1f))
             }
         }
 
-        // 📋 HISTORIAL
+        // HISTORIAL
         item {
             Text(
                 "Historial",
@@ -139,7 +139,7 @@ fun FaltasScreen(
 }
 
 @Composable
-fun ResumenPro(
+fun Resumen(
     titulo: String,
     valor: Int,
     color: Color,
@@ -268,6 +268,6 @@ fun EmptyFaltasState() {
             .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("No tienes faltas registradas 🎉")
+        Text("No tienes faltas registradas")
     }
 }

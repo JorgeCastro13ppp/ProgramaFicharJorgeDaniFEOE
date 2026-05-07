@@ -118,7 +118,7 @@ fun HomeScreen(
                 )
             }
 
-            // 🕓 ÚLTIMO FICHAJE
+            // ÚLTIMO FICHAJE
             item {
                 Text("Último fichaje", fontWeight = FontWeight.Bold)
             }
@@ -143,7 +143,7 @@ fun HomeScreen(
                 }
             }
 
-            // 📋 HISTORIAL
+            // HISTORIAL
             item {
                 Text("Actividad reciente", fontWeight = FontWeight.Bold)
             }

@@ -78,13 +78,13 @@ object RetrofitInstance {
             .readTimeout(TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
 
-            // 🔥 CLAVE: usar tu CA
+            // CLAVE: usar tu CA
             .sslSocketFactory(
                 sslContext.socketFactory,
                 trustManager
             )
 
-            // ⚠️ SOLO DEV (porque usas IP)
+            // SOLO DEV (porque usas IP)
             .hostnameVerifier { _, _ -> true }
 
             .addInterceptor(authInterceptor)
