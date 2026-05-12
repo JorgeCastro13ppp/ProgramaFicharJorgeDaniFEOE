@@ -20,11 +20,6 @@ object SessionManager {
         edit { it.putString(KEY_FCM_TOKEN, token) }
     }
 
-    fun getFcmToken(): String? {
-        checkInitialization()
-        return prefs.getString(KEY_FCM_TOKEN, null)
-    }
-
     fun init(context: Context) {
 
         if (!::prefs.isInitialized) {
@@ -93,6 +88,21 @@ object SessionManager {
     }
 
     fun clearSession() {
-        edit { it.clear() }
+
+        try {
+
+            checkInitialization()
+
+            prefs.edit()
+                .remove(KEY_TOKEN)
+                .remove(KEY_USERNAME)
+                .remove(KEY_USER_ID)
+                .remove(KEY_FCM_TOKEN)
+                .apply()
+
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+        }
     }
 }
