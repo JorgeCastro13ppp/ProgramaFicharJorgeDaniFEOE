@@ -9,26 +9,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.data.model.Fichaje
+import com.example.programaficharfeoe.ui.components.FichajeHeader
 import com.example.programaficharfeoe.utils.normalizarTimestamp
 import com.example.programaficharfeoe.viewmodel.DashboardViewModel
 import com.example.programaficharfeoe.viewmodel.FichajeViewModel
+import com.example.programaficharfeoe.ui.utils.obtenerColorFichaje
+import com.example.programaficharfeoe.ui.utils.obtenerIconoFichaje
+import com.example.programaficharfeoe.ui.components.LoadingView
 
 @Composable
 fun FichajeScreen() {
@@ -49,9 +46,7 @@ fun FichajeScreen() {
         return
     }
 
-    val accionesDisponibles = fichajeViewModel.accionesDisponibles
-    val fichajes = fichajeViewModel.fichajesLocales
-    val cargando = fichajeViewModel.cargando
+    val state = fichajeViewModel.uiState
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -64,13 +59,10 @@ fun FichajeScreen() {
         fichajeViewModel.cargarDatos(userId)
     }
 
-    if (cargando) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+    if (state.cargando) {
+
+        LoadingView()
+
         return
     }
 
@@ -81,69 +73,19 @@ fun FichajeScreen() {
     ) {
 
         // HEADER
-        Card(
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color(0xFF1E3A8A),
-                                Color(0xFF2563EB)
-                            )
-                        )
-                    )
-                    .padding(20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Icon(
-                        Icons.Default.AccessTime,
-                        null,
-                        tint = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column {
-
-                        Text(
-                            "Fichaje",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            "Acciones disponibles",
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-                    }
-                }
-            }
-        }
+        FichajeHeader()
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (accionesDisponibles.isEmpty()) {
+        if (state.accionesDisponibles.isEmpty()) {
             Text("No hay acciones disponibles ahora mismo")
         } else {
 
-            accionesDisponibles.forEach { accionCompleta ->
+            state.accionesDisponibles.forEach { accionCompleta ->
 
                 val texto = accionCompleta.replace("_", " ")
 
-                val color = when {
-                    accionCompleta.startsWith("ENTRADA") -> Color(0xFF22C55E)
-                    accionCompleta.startsWith("SALIDA") -> Color(0xFFEF4444)
-                    accionCompleta.contains("DESCANSO") -> Color(0xFFF59E0B)
-                    accionCompleta.contains("VIAJE") -> Color(0xFF3B82F6)
-                    else -> MaterialTheme.colorScheme.primary
-                }
+                val color = obtenerColorFichaje(accionCompleta)
 
                 Button(
                     onClick = {
@@ -187,7 +129,7 @@ fun FichajeScreen() {
             shape = RoundedCornerShape(16.dp)
         ) {
 
-            if (fichajes.isEmpty()) {
+            if (state.fichajesLocales.isEmpty()) {
 
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -203,7 +145,7 @@ fun FichajeScreen() {
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
 
-                    items(fichajes.sortedByDescending { it.fechaHora }) { fichaje ->
+                    items(state.fichajesLocales.sortedByDescending { it.fechaHora }) { fichaje ->
                         RegistroItem(fichaje)
                         HorizontalDivider()
                     }
@@ -212,9 +154,16 @@ fun FichajeScreen() {
         }
     }
     // MENSAJES
-    fichajeViewModel.mensaje?.let { mensaje ->
+    state.mensaje?.let { mensaje ->
+
         LaunchedEffect(mensaje) {
-            Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(
+                context,
+                mensaje,
+                Toast.LENGTH_SHORT
+            ).show()
+
             fichajeViewModel.limpiarMensaje()
         }
     }
@@ -227,20 +176,9 @@ fun RegistroItem(
 
     val tipo = fichaje.tipo.uppercase()
 
-    val color = when {
-        tipo.startsWith("ENTRADA") -> Color(0xFF22C55E)
-        tipo.startsWith("SALIDA") -> Color(0xFFEF4444)
-        tipo.contains("DESCANSO") -> Color(0xFFF59E0B)
-        tipo.contains("VIAJE") -> Color(0xFF3B82F6)
-        else -> MaterialTheme.colorScheme.primary
-    }
+    val color = obtenerColorFichaje(tipo)
 
-    val icono = when {
-        tipo.startsWith("ENTRADA") -> Icons.Default.Login
-        tipo.startsWith("SALIDA") -> Icons.Default.Logout
-        tipo.contains("VIAJE") -> Icons.Default.DirectionsCar
-        else -> Icons.Default.AccessTime
-    }
+    val icono = obtenerIconoFichaje(tipo)
 
     Card(
         modifier = Modifier.fillMaxWidth(),

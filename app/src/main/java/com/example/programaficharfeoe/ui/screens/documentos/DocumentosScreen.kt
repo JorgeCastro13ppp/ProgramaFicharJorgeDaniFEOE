@@ -31,6 +31,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.programaficharfeoe.data.model.Documento
 import com.example.programaficharfeoe.viewmodel.DocumentosViewModel
+import com.example.programaficharfeoe.ui.components.LoadingView
+import com.example.programaficharfeoe.ui.components.ErrorView
+import com.example.programaficharfeoe.ui.components.AppCard
 
 @Composable
 fun DocumentosMenuScreen(navController: NavController) {
@@ -156,16 +159,10 @@ fun CategoriaCard(
     icono: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
-    Card(
+    AppCard(
         modifier = Modifier
-            .fillMaxWidth()
             .height(92.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -227,9 +224,7 @@ fun DocumentosScreen(
     val context = LocalContext.current
     val viewModel: DocumentosViewModel = viewModel()
 
-    val docs = viewModel.documentos
-    val isLoading = viewModel.isLoading
-    val error = viewModel.error
+    val state = viewModel.uiState
 
     LaunchedEffect(tipo) {
         viewModel.cargarDocumentos(tipo)
@@ -247,23 +242,17 @@ fun DocumentosScreen(
 
         when {
 
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+            state.isLoading -> {
+                LoadingView()
             }
 
-            error != null -> {
-                Text(
-                    text = "Error: $error",
-                    color = MaterialTheme.colorScheme.error
+            state.error != null -> {
+                ErrorView(
+                    message = state.error ?: "Error desconocido"
                 )
             }
 
-            docs.isEmpty() -> {
+            state.documentos.isEmpty() -> {
                 EmptyState()
             }
 
@@ -271,7 +260,9 @@ fun DocumentosScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(docs.sortedByDescending { it.id }) { doc ->
+                    items(
+                        state.documentos.sortedByDescending { it.id }
+                    ) { doc ->
 
                         DocumentoItem(
                             doc = doc,
@@ -358,15 +349,9 @@ fun DocumentoItem(
         else -> Icons.Default.Description
     }
 
-    Card(
+    AppCard(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            .clickable { onClick() }
     ) {
 
         Row(

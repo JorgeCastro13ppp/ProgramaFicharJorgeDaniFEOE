@@ -4,9 +4,10 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.programaficharfeoe.data.model.Fichaje
 import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
+import com.example.programaficharfeoe.utils.ApiResult
+import com.example.programaficharfeoe.ui.state.DashboardUiState
 
 class DashboardViewModel : ViewModel() {
 
@@ -14,30 +15,9 @@ class DashboardViewModel : ViewModel() {
     private val api = AppModule.api
 
     // ESTADO
-    var estadoActual by mutableStateOf<String?>(null)
-        private set
-
-    var accionesDisponibles by mutableStateOf<List<String>>(emptyList())
-        private set
-
-    var fichajesHoy by mutableStateOf<List<Fichaje>>(emptyList())
-        private set
-
-    var horasHoyMs by mutableStateOf<Long?>(null)
-        private set
-
-    var diasVacacionesRestantes by mutableStateOf<Int?>(null)
-
-    var diasLibresRestantes by mutableStateOf<Int?>(null)
-        private set
-
-    var diasNavidadRestantes by mutableStateOf<Int?>(null)
-        private set
-
-    var cargando by mutableStateOf(false)
-        private set
-
-    var error by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(
+        DashboardUiState()
+    )
         private set
 
     // CARGA DASHBOARD
@@ -45,55 +25,88 @@ class DashboardViewModel : ViewModel() {
 
         viewModelScope.launch {
 
-            cargando = true
-            error = null
+            uiState = uiState.copy(
+                cargando = true,
+                error = null
+            )
 
             try {
 
                 // ESTADO ACTUAL
-                fichajeRepo.getEstadoActual(userId)
-                    .onSuccess {
-                        estadoActual = it.estado
+                when (val result = fichajeRepo.getEstadoActual(userId)) {
+
+                    is ApiResult.Success -> {
+
+                        uiState = uiState.copy(
+                            estadoActual = result.data.estado
+                        )
                     }
-                    .onFailure {
-                        error = it.message
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            error = result.message
+                        )
                     }
+                }
 
                 // ACCIONES DISPONIBLES
-                fichajeRepo.getSiguientesAcciones(userId)
-                    .onSuccess { response ->
+                when (val result = fichajeRepo.getSiguientesAcciones(userId)) {
 
-                        accionesDisponibles =
-                            (response.accionesTaller +
-                                    response.accionesObra +
-                                    response.accionesReparacion)
+                    is ApiResult.Success -> {
+
+                        val response = result.data
+
+                        uiState = uiState.copy(
+                            accionesDisponibles =
+                                response.accionesTaller +
+                                        response.accionesObra +
+                                        response.accionesReparacion
+                        )
                     }
-                    .onFailure {
-                        error = it.message
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            error = result.message
+                        )
                     }
+                }
 
                 // FICHAJES DE HOY
-                fichajeRepo.getFichajesDelDia(userId)
-                    .onSuccess { lista ->
+                when (val result = fichajeRepo.getFichajesDelDia(userId)) {
 
-                        fichajesHoy =
-                            lista.sortedBy { it.fechaHora }
+                    is ApiResult.Success -> {
+
+                        uiState = uiState.copy(
+                            fichajesHoy =
+                                result.data.sortedBy { it.fechaHora }
+                        )
                     }
-                    .onFailure {
-                        error = it.message
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            error = result.message
+                        )
                     }
+                }
 
                 // HORAS HOY (MILISEGUNDOS)
                 try {
                     val response = api.getHorasHoy(userId)
 
-                    horasHoyMs = response.tiempo
+                    uiState = uiState.copy(
+                        horasHoyMs = response.tiempo
+                    )
 
                 } catch (e: Exception) {
 
                     Log.e("DASHBOARD", "Error horas", e)
 
-                    horasHoyMs = null
+                    uiState = uiState.copy(
+                        horasHoyMs = null
+                    )
                 }
 
                 try {
@@ -101,9 +114,17 @@ class DashboardViewModel : ViewModel() {
 
                     Log.d("VACACIONES", response.toString())
 
-                    diasVacacionesRestantes = response.diasTotalesRestantes
-                    diasLibresRestantes = response.diasLibresRestantes
-                    diasNavidadRestantes = response.diasNavidadRestantes
+                    uiState = uiState.copy(
+
+                        diasVacacionesRestantes =
+                            response.diasTotalesRestantes,
+
+                        diasLibresRestantes =
+                            response.diasLibresRestantes,
+
+                        diasNavidadRestantes =
+                            response.diasNavidadRestantes
+                    )
 
                 } catch (e: Exception) {
                     Log.e("VACACIONES", "ERROR", e)
@@ -111,10 +132,13 @@ class DashboardViewModel : ViewModel() {
 
             } catch (e: Exception) {
 
-                error = e.message ?: "Error cargando dashboard"
-
+                uiState = uiState.copy(
+                    error = e.message ?: "Error cargando dashboard"
+                )
             } finally {
-                cargando = false
+                uiState = uiState.copy(
+                    cargando = false
+                )
             }
         }
     }

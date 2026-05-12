@@ -51,4 +51,14 @@ interface ApiService {
 
     @GET("vacaciones/resumen")
     suspend fun getVacacionesResumen(): VacacionesResumenResponse
+
+    @POST("device/register")
+    suspend fun registrarTokenFCM(
+
+        @Header("Authorization")
+        token: String,
+
+        @Body
+        request: FcmTokenRequest
+    )
 }

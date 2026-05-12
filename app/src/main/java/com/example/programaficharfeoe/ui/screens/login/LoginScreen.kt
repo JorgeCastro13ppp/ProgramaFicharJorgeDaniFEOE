@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.R
 import com.example.programaficharfeoe.viewmodel.LoginViewModel
+import com.example.programaficharfeoe.ui.components.AppButton
+import com.example.programaficharfeoe.ui.components.ErrorView
 
 @Composable
 fun LoginScreen(
@@ -22,12 +24,10 @@ fun LoginScreen(
 ) {
     val viewModel: LoginViewModel = viewModel()
 
-    val username by remember { derivedStateOf { viewModel.username } }
-    val password by remember { derivedStateOf { viewModel.password } }
-    val loginResult by remember { derivedStateOf { viewModel.loginResult } }
+    val state = viewModel.uiState
 
-    LaunchedEffect(loginResult) {
-        if (loginResult == "OK") {
+    LaunchedEffect(state.loginSuccess) {
+        if (state.loginSuccess) {
             onLoginSuccess()
         }
     }
@@ -84,39 +84,52 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     OutlinedTextField(
-                        value = username,
-                        onValueChange = { viewModel.username = it },
+                        value = state.username,
+                        onValueChange = {
+                            viewModel.onUsernameChange(it)
+                            viewModel.limpiarError()
+                        },
                         label = { Text("Usuario") },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
-                        value = password,
-                        onValueChange = { viewModel.password = it },
+                        value = state.password,
+                        onValueChange = {
+                            viewModel.onPasswordChange(it)
+                            viewModel.limpiarError()
+                        },
                         label = { Text("Contraseña") },
+                        singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Button(
-                        onClick = { viewModel.login() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Entrar")
-                    }
+                    AppButton(
 
-                    if (loginResult == "ERROR") {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Credenciales incorrectas",
-                            color = MaterialTheme.colorScheme.error
+                        text = "Entrar",
+
+                        onClick = {
+                            viewModel.login()
+                        },
+
+                        isLoading = state.isLoading
+                    )
+
+                    state.error?.let { error ->
+
+                        Spacer(
+                            modifier = Modifier.height(16.dp)
+                        )
+
+                        ErrorView(
+                            message = error,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

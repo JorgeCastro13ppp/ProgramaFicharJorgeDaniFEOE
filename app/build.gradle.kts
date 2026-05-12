@@ -177,4 +177,6 @@ dependencies {
     implementation(
         "androidx.compose.material:material:1.6.1"
     )
+
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

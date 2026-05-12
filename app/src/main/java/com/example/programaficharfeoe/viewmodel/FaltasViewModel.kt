@@ -6,30 +6,48 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.model.Falta
 import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
+import com.example.programaficharfeoe.ui.state.FaltasUiState
+import com.example.programaficharfeoe.utils.ApiResult
 
 class FaltasViewModel : ViewModel() {
 
     private val repository = AppModule.faltasRepository
 
-    var faltas by mutableStateOf<List<Falta>>(emptyList())
-        private set
-
-    var isLoading by mutableStateOf(false)
-        private set
-
-    var error by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(
+        FaltasUiState()
+    )
         private set
 
     fun cargarFaltas() {
         viewModelScope.launch {
-            isLoading = true
-            error = null
+            uiState = uiState.copy(
+                isLoading = true,
+                error = null
+            )
 
-            repository.getFaltas()
-                .onSuccess { faltas = it }
-                .onFailure { error = it.message }
+            when (
+                val result =
+                    repository.getFaltas()
+            ) {
 
-            isLoading = false
+                is ApiResult.Success -> {
+
+                    uiState = uiState.copy(
+                        faltas = result.data
+                    )
+                }
+
+                is ApiResult.Error -> {
+
+                    uiState = uiState.copy(
+                        error = result.message
+                    )
+                }
+            }
+
+            uiState = uiState.copy(
+                isLoading = false
+            )
         }
     }
 }

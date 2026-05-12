@@ -2,6 +2,8 @@ package com.example.programaficharfeoe.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 object SessionManager {
 
@@ -12,6 +14,8 @@ object SessionManager {
 
     private const val KEY_FCM_TOKEN = "fcm_token"
 
+    private lateinit var prefs: SharedPreferences
+
     fun saveFcmToken(token: String) {
         edit { it.putString(KEY_FCM_TOKEN, token) }
     }
@@ -21,13 +25,26 @@ object SessionManager {
         return prefs.getString(KEY_FCM_TOKEN, null)
     }
 
-    private lateinit var prefs: SharedPreferences
-
     fun init(context: Context) {
+
         if (!::prefs.isInitialized) {
-            prefs = context.applicationContext.getSharedPreferences(
+
+            val appContext = context.applicationContext
+
+            val masterKey = MasterKey.Builder(
+                appContext
+            )
+                .setKeyScheme(
+                    MasterKey.KeyScheme.AES256_GCM
+                )
+                .build()
+
+            prefs = EncryptedSharedPreferences.create(
+                appContext,
                 PREF_NAME,
-                Context.MODE_PRIVATE
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
         }
     }

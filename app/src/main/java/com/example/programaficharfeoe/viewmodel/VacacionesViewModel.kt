@@ -8,52 +8,79 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.model.Vacacion
 import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
+import com.example.programaficharfeoe.ui.state.VacacionesUiState
+import com.example.programaficharfeoe.utils.ApiResult
 
 class VacacionesViewModel : ViewModel() {
 
     private val repository = AppModule.vacacionesRepository
 
-    var vacaciones by mutableStateOf<List<Vacacion>>(emptyList())
-        private set
-
-    var isLoading by mutableStateOf(false)
-        private set
-
-    var error by mutableStateOf<String?>(null)
-        private set
-
-    var solicitudOk by mutableStateOf(false)
-        private set
-
-    var errorSolicitud by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(
+        VacacionesUiState()
+    )
         private set
 
     fun cargarVacaciones() {
         viewModelScope.launch {
-            isLoading = true
-            error = null
+            uiState = uiState.copy(
+                isLoading = true,
+                error = null
+            )
 
-            repository.getVacaciones()
-                .onSuccess { vacaciones = it }
-                .onFailure { error = it.message }
+            when (val result = repository.getVacaciones()) {
 
-            isLoading = false
+                is ApiResult.Success -> {
+
+                    uiState = uiState.copy(
+                        vacaciones = result.data
+                    )
+                }
+
+                is ApiResult.Error -> {
+
+                    uiState = uiState.copy(
+                        error = result.message
+                    )
+                }
+            }
+
+            uiState = uiState.copy(
+                isLoading = false
+            )
         }
     }
 
     fun solicitarVacaciones(fechaInicio: String, fechaFin: String) {
         viewModelScope.launch {
-            solicitudOk = false
-            errorSolicitud = null
+            uiState = uiState.copy(
+                solicitudOk = false,
+                errorSolicitud = null
+            )
 
-            repository.solicitarVacaciones(fechaInicio, fechaFin)
-                .onSuccess {
-                    solicitudOk = true
+            when (
+                val result =
+                    repository.solicitarVacaciones(
+                        fechaInicio,
+                        fechaFin
+                    )
+            ) {
+
+                is ApiResult.Success -> {
+
+                    uiState = uiState.copy(
+                        solicitudOk = true
+                    )
+
                     cargarVacaciones()
                 }
-                .onFailure {
-                    errorSolicitud = it.message
+
+                is ApiResult.Error -> {
+
+                    uiState = uiState.copy(
+                        errorSolicitud = result.message
+                    )
                 }
+            }
         }
     }
 }

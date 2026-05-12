@@ -25,6 +25,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import com.example.programaficharfeoe.ui.components.AppCard
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -34,13 +35,22 @@ fun HomeScreen(
 
     val userId = SessionManager.getUserId()
 
-    val estado = dashboardViewModel.estadoActual
-    val fichajes = dashboardViewModel.fichajesHoy
-    val cargando = dashboardViewModel.cargando
+    val state = dashboardViewModel.uiState
 
-    val diasRestantes = dashboardViewModel.diasVacacionesRestantes
-    val diasLibres = dashboardViewModel.diasLibresRestantes
-    val diasNavidad = dashboardViewModel.diasNavidadRestantes
+    val estado = state.estadoActual
+
+    val fichajes = state.fichajesHoy
+
+    val cargando = state.cargando
+
+    val diasRestantes =
+        state.diasVacacionesRestantes
+
+    val diasLibres =
+        state.diasLibresRestantes
+
+    val diasNavidad =
+        state.diasNavidadRestantes
 
     val estadoColor = getEstadoColor(estado)
 
@@ -69,21 +79,8 @@ fun HomeScreen(
 
             // ESTADO
             item {
-                val isDark = isSystemInDarkTheme()
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark)
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                        else
-                            MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = if (isDark) 0.dp else 3.dp
-                    )
-                ) {
+                AppCard {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -148,8 +145,11 @@ fun HomeScreen(
                 Text("Actividad reciente", fontWeight = FontWeight.Bold)
             }
 
-            items(fichajes.takeLast(3).reversed()) {
-                RegistroItem(it)
+            items(
+                items = fichajes.takeLast(3).reversed()
+            ) { fichaje ->
+
+                RegistroItem(fichaje)
             }
         }
 

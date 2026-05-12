@@ -4,14 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BeachAccess
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,10 +21,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.local.SessionManager
+import com.example.programaficharfeoe.ui.components.AppCard
 import com.example.programaficharfeoe.ui.screens.home.VacacionesCard
 import com.example.programaficharfeoe.viewmodel.DashboardViewModel
 import com.example.programaficharfeoe.viewmodel.VacacionesViewModel
 import java.util.Calendar
+import com.example.programaficharfeoe.ui.components.LoadingView
+import com.example.programaficharfeoe.ui.components.ErrorView
+import com.example.programaficharfeoe.ui.components.AppButton
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun VacacionesScreen(
@@ -34,19 +37,22 @@ fun VacacionesScreen(
 ) {
 
     val dashboardViewModel: DashboardViewModel = viewModel()
-    val vacaciones = viewModel.vacaciones
-    val isLoading = viewModel.isLoading
-    val error = viewModel.error
-    val solicitudOk = viewModel.solicitudOk
-    val errorSolicitud = viewModel.errorSolicitud
+    val vacacionesState = viewModel.uiState
 
     var fechaInicio by remember { mutableStateOf("") }
     var fechaFin by remember { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
 
-    val diasRestantes = dashboardViewModel.diasVacacionesRestantes
-    val diasLibres = dashboardViewModel.diasLibresRestantes
-    val diasNavidad = dashboardViewModel.diasNavidadRestantes
+    val dashboardState = dashboardViewModel.uiState
+
+    val diasRestantes =
+        dashboardState.diasVacacionesRestantes
+
+    val diasLibres =
+        dashboardState.diasLibresRestantes
+
+    val diasNavidad =
+        dashboardState.diasNavidadRestantes
 
     LaunchedEffect(Unit) {
         viewModel.cargarVacaciones()
@@ -182,7 +188,10 @@ fun VacacionesScreen(
 
         item {
 
-            Button(
+            AppButton(
+
+                text = "Enviar solicitud",
+
                 onClick = {
 
                     val e = validarFechas(
@@ -191,30 +200,20 @@ fun VacacionesScreen(
                     )
 
                     if (e != null) {
+
                         errorFechas = e
+
                     } else {
+
                         errorFechas = null
+
                         viewModel.solicitarVacaciones(
                             fechaInicio,
                             fechaFin
                         )
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-
-                Icon(Icons.Default.Send, null)
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    "Enviar solicitud",
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                }
+            )
         }
 
         errorFechas?.let {
@@ -226,7 +225,7 @@ fun VacacionesScreen(
             }
         }
 
-        if (solicitudOk) {
+        if (vacacionesState.solicitudOk) {
             item {
                 Text(
                     "Solicitud enviada correctamente",
@@ -235,11 +234,11 @@ fun VacacionesScreen(
             }
         }
 
-        errorSolicitud?.let {
+        vacacionesState.errorSolicitud?.let {
             item {
-                Text(
-                    "Error: $it",
-                    color = MaterialTheme.colorScheme.error
+
+                ErrorView(
+                    message = vacacionesState.error ?: "Error desconocido"
                 )
             }
         }
@@ -254,24 +253,24 @@ fun VacacionesScreen(
             )
         }
 
-        if (isLoading) {
+        if (vacacionesState.isLoading) {
 
             item {
-                CircularProgressIndicator()
+                LoadingView()
             }
 
-        } else if (error != null) {
+        } else if (vacacionesState.error != null) {
 
             item {
                 Text(
-                    "Error: $error",
+                    "Error: ${vacacionesState.error}",
                     color = MaterialTheme.colorScheme.error
                 )
             }
 
         } else {
 
-            items(vacaciones) { v ->
+            items(vacacionesState.vacaciones) { v ->
 
                 val estado = v.estado.trim().uppercase()
 
@@ -299,13 +298,7 @@ fun VacacionesScreen(
                     else -> Icons.Default.CalendarMonth
                 }
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
+                AppCard {
 
                     Row(
                         modifier = Modifier.padding(16.dp),

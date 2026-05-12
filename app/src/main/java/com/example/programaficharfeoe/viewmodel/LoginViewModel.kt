@@ -6,116 +6,140 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.di.AppModule
-import com.example.programaficharfeoe.utils.Constants
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.net.HttpURLConnection
-import java.net.URL
+import com.example.programaficharfeoe.ui.state.LoginUiState
+import com.example.programaficharfeoe.utils.ApiResult
 
 class LoginViewModel : ViewModel() {
 
     private val repository = AppModule.authRepository
 
-    var username by mutableStateOf("")
-    var password by mutableStateOf("")
-
-    var loginResult by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(LoginUiState())
         private set
 
-    var isLoading by mutableStateOf(false)
-        private set
+    fun onUsernameChange(value: String) {
+
+        uiState = uiState.copy(
+            username = value
+        )
+    }
+
+    fun onPasswordChange(value: String) {
+
+        uiState = uiState.copy(
+            password = value
+        )
+    }
+
+    fun limpiarError() {
+
+        uiState = uiState.copy(
+            error = null
+        )
+    }
 
 
     fun login() {
 
         viewModelScope.launch {
 
-            isLoading = true
+            if (
+                uiState.username.isBlank() ||
+                uiState.password.isBlank()
+            ) {
 
-            repository.login(username, password)
-                .onSuccess {
+                uiState = uiState.copy(
+                    error = "Completa todos los campos"
+                )
 
-                    SessionManager.saveToken(it.token)
-                    SessionManager.saveUsername(username)
-                    SessionManager.saveUserId(it.userId)
+                return@launch
+            }
 
-                    enviarTokenFCMAlBackend(it.token)
+            uiState = uiState.copy(
+                isLoading = true,
+                error = null
+            )
 
-                    loginResult = "OK"
+            when (
+                val result = repository.login(
+                    uiState.username,
+                    uiState.password
+                )
+            ) {
+
+                is ApiResult.Success -> {
+
+                    val response = result.data
+
+                    SessionManager.saveToken(response.token)
+
+                    SessionManager.saveUsername(
+                        uiState.username
+                    )
+
+                    SessionManager.saveUserId(
+                        response.userId
+                    )
+
+                    enviarTokenFCMAlBackend(
+                        response.token
+                    )
+
+                    uiState = uiState.copy(
+                        loginSuccess = true,
+                        isLoading = false
+                    )
                 }
 
-                .onFailure {
+                is ApiResult.Error -> {
 
-                    loginResult = "ERROR"
+                    uiState = uiState.copy(
+                        error = result.message,
+                        isLoading = false
+                    )
                 }
-
-            isLoading = false
+            }
         }
     }
 
 
-    private fun enviarTokenFCMAlBackend(jwt: String) {
+    private fun enviarTokenFCMAlBackend(
+        jwt: String
+    ) {
 
         FirebaseMessaging.getInstance().token
             .addOnSuccessListener { fcmToken ->
 
-                Log.d("FCM_DEBUG", "Token obtenido: $fcmToken")
+                viewModelScope.launch {
 
-                viewModelScope.launch(Dispatchers.IO) {
+                    when (
 
-                    try {
+                        val result =
+                            repository.registrarTokenFCM(
+                                jwt,
+                                fcmToken
+                            )
 
-                        val url =
-                            URL("${Constants.BASE_URL}/device/register")
+                    ) {
 
-                        val conn =
-                            url.openConnection()
-                                    as HttpURLConnection
+                        is ApiResult.Success -> {
 
-                        conn.requestMethod = "POST"
-
-                        conn.setRequestProperty(
-                            "Content-Type",
-                            "application/json"
-                        )
-
-                        conn.setRequestProperty(
-                            "Authorization",
-                            "Bearer $jwt"
-                        )
-
-                        conn.doOutput = true
-
-                        val body =
-                            """
-                        {
-                            "token": "$fcmToken",
-                            "platform": "android"
-                        }
-                        """.trimIndent()
-
-                        conn.outputStream.use {
-
-                            it.write(body.toByteArray())
+                            Log.d(
+                                "FCM_DEBUG",
+                                "Token enviado correctamente"
+                            )
                         }
 
-                        Log.d("FCM_DEBUG", "Response code: ${conn.responseCode}")
+                        is ApiResult.Error -> {
 
-
-                        Log.d(
-                            "FCM_DEBUG",
-                            "Token enviado correctamente al backend"
-                        )
-
-                    } catch (e: Exception) {
-
-                        Log.e(
-                            "FCM_DEBUG",
-                            "Error enviando token",
-                            e
-                        )
+                            Log.e(
+                                "FCM_DEBUG",
+                                result.message
+                            )
+                        }
                     }
                 }
             }
-    }}
+        }
+}

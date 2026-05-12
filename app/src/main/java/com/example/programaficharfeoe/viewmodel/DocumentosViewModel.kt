@@ -6,30 +6,48 @@ import androidx.lifecycle.viewModelScope
 import com.example.programaficharfeoe.data.model.Documento
 import com.example.programaficharfeoe.di.AppModule
 import kotlinx.coroutines.launch
+import com.example.programaficharfeoe.ui.state.DocumentosUiState
+import com.example.programaficharfeoe.utils.ApiResult
 
 class DocumentosViewModel : ViewModel() {
 
     private val repository = AppModule.documentoRepository
 
-    var documentos by mutableStateOf<List<Documento>>(emptyList())
-        private set
-
-    var isLoading by mutableStateOf(false)
-        private set
-
-    var error by mutableStateOf<String?>(null)
+    var uiState by mutableStateOf(
+        DocumentosUiState()
+    )
         private set
 
     fun cargarDocumentos(tipo: String) {
         viewModelScope.launch {
-            isLoading = true
-            error = null
+            uiState = uiState.copy(
+                isLoading = true,
+                error = null
+            )
 
-            repository.getDocumentos(tipo)
-                .onSuccess { documentos = it }
-                .onFailure { error = it.message }
+            when (
+                val result =
+                    repository.getDocumentos(tipo)
+            ) {
 
-            isLoading = false
+                is ApiResult.Success -> {
+
+                    uiState = uiState.copy(
+                        documentos = result.data
+                    )
+                }
+
+                is ApiResult.Error -> {
+
+                    uiState = uiState.copy(
+                        error = result.message
+                    )
+                }
+            }
+
+            uiState = uiState.copy(
+                isLoading = false
+            )
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.programaficharfeoe.ui.screens.faltas
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.programaficharfeoe.data.model.Falta
 import com.example.programaficharfeoe.viewmodel.FaltasViewModel
+import com.example.programaficharfeoe.ui.components.LoadingView
+import com.example.programaficharfeoe.ui.components.ErrorView
+import com.example.programaficharfeoe.ui.components.AppCard
 
 @Composable
 fun FaltasScreen(
@@ -33,8 +35,11 @@ fun FaltasScreen(
         viewModel.cargarFaltas()
     }
 
-    val faltas = viewModel.faltas
-    val cargando = viewModel.isLoading
+    val state = viewModel.uiState
+
+    val faltas = state.faltas
+
+    val cargando = state.isLoading
 
     val justificadas = faltas.count { it.tipo.equals("JUSTIFICADA", true) }
     val retrasos = faltas.count { it.tipo.equals("RETRASO", true) }
@@ -113,12 +118,17 @@ fun FaltasScreen(
 
             cargando -> {
                 item {
-                    Box(
-                        modifier = Modifier.fillParentMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    LoadingView()
+                }
+            }
+
+            state.error != null -> {
+
+                item {
+
+                    ErrorView(
+                        message = state.error ?: "Error desconocido"
+                    )
                 }
             }
 
@@ -145,20 +155,9 @@ fun Resumen(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
 
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark)
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isDark) 0.dp else 4.dp
-        )
+    AppCard(
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier
@@ -200,21 +199,7 @@ fun FaltaItem(falta: Falta) {
         else -> Color(0xFFEF4444) to Icons.Default.EventBusy
     }
 
-    val isDark = isSystemInDarkTheme()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark)
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isDark) 0.dp else 3.dp
-        )
-    ) {
+    AppCard {
 
         Row(
             modifier = Modifier.padding(16.dp),

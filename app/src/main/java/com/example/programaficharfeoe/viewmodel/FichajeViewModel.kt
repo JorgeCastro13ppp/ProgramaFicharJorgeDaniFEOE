@@ -10,78 +10,102 @@ import com.example.programaficharfeoe.data.model.*
 import com.example.programaficharfeoe.di.AppModule
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import com.example.programaficharfeoe.ui.state.FichajeUiState
+import com.example.programaficharfeoe.utils.ApiResult
 
 class FichajeViewModel : ViewModel() {
 
     private val repo = AppModule.fichajeRepository
 
-    var fichajesLocales by mutableStateOf<List<Fichaje>>(emptyList())
-        private set
-
-    var ultimaAccion by mutableStateOf<String?>(null)
-        private set
-
-    var estadoActual by mutableStateOf<String?>(null)
-        private set
-
-    var haFichadoHoy by mutableStateOf(false)
-        private set
-
-    var cargando by mutableStateOf(false)
-        private set
-
-    var mensaje by mutableStateOf<String?>(null)
-
-    var accionesDisponibles by mutableStateOf<List<String>>(emptyList())
+    var uiState by mutableStateOf(FichajeUiState())
         private set
 
     fun limpiarMensaje() {
-        mensaje = null
+
+        uiState = uiState.copy(
+            mensaje = null
+        )
     }
 
     fun cargarDatos(userId: Int) {
         viewModelScope.launch {
-            cargando = true
+            uiState = uiState.copy(
+                cargando = true
+            )
             try {
                 val fichajesResult = repo.getFichajesDelDia(userId)
                 val accionesResult = repo.getSiguientesAcciones(userId)
 
-                fichajesResult.onSuccess { fichajes ->
-                    fichajesLocales = fichajes
-                        .sortedBy { it.fechaHora }
-                        .map {
-                            Fichaje(
-                                id = it.id,
-                                userId = it.userId,
-                                username = it.username,
-                                fechaHora = it.fechaHora,
-                                tipo = it.tipo.uppercase()
-                            )
-                        }
+                when (fichajesResult) {
 
-                    haFichadoHoy = fichajesLocales.isNotEmpty()
-                    ultimaAccion = fichajesLocales.lastOrNull()?.tipo
+                    is ApiResult.Success -> {
+
+                        val fichajes = fichajesResult.data
+
+                        val fichajesTransformados = fichajes
+                            .sortedBy { it.fechaHora }
+                            .map {
+                                Fichaje(
+                                    id = it.id,
+                                    userId = it.userId,
+                                    username = it.username,
+                                    fechaHora = it.fechaHora,
+                                    tipo = it.tipo.uppercase()
+                                )
+                            }
+
+                        uiState = uiState.copy(
+                            fichajesLocales = fichajesTransformados,
+                            haFichadoHoy = fichajesTransformados.isNotEmpty(),
+                            ultimaAccion = fichajesTransformados.lastOrNull()?.tipo
+                        )
+                    }
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            mensaje = fichajesResult.message
+                        )
+                    }
                 }
 
-                accionesResult.onSuccess { response ->
-                    estadoActual = response.estado
+                when (accionesResult) {
 
-                    accionesDisponibles =
-                        response.accionesTaller +
-                                response.accionesObra +
-                                response.accionesReparacion
-                }
+                    is ApiResult.Success -> {
 
-                accionesResult.onFailure {
-                    mensaje = it.message ?: "Error al obtener las acciones"
-                    Log.e("FICHAJE", "Error al obtener acciones", it)
+                        val response = accionesResult.data
+
+                        uiState = uiState.copy(
+                            estadoActual = response.estado,
+                            accionesDisponibles =
+                                response.accionesTaller +
+                                        response.accionesObra +
+                                        response.accionesReparacion
+                        )
+                    }
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            mensaje = accionesResult.message
+                        )
+
+                        Log.e(
+                            "FICHAJE",
+                            "Error al obtener acciones"
+                        )
+                    }
                 }
 
             } catch (e: Exception) {
-                mensaje = "Error al cargar los datos"
+                uiState = uiState.copy(
+                    mensaje = "Error al cargar los datos"
+                )
                 Log.e("FICHAJE", "Error", e)
             } finally {
-                cargando = false
+                uiState = uiState.copy(
+                    cargando = false
+                )
             }
         }
     }
@@ -115,17 +139,29 @@ class FichajeViewModel : ViewModel() {
 
                 val result = repo.fichar(request)
 
-                result.onSuccess {
-                    mensaje = "Fichaje registrado correctamente"
-                    cargarDatos(userId)
-                }
+                when (result) {
 
-                result.onFailure {
-                    mensaje = it.message ?: "Error al fichar"
+                    is ApiResult.Success -> {
+
+                        uiState = uiState.copy(
+                            mensaje = "Fichaje registrado correctamente"
+                        )
+
+                        cargarDatos(userId)
+                    }
+
+                    is ApiResult.Error -> {
+
+                        uiState = uiState.copy(
+                            mensaje = result.message
+                        )
+                    }
                 }
 
             } catch (e: Exception) {
-                mensaje = "Error inesperado"
+                uiState = uiState.copy(
+                    mensaje = "Error inesperado"
+                )
             }
         }
     }
