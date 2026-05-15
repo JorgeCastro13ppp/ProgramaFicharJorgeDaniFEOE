@@ -26,7 +26,19 @@ import com.example.programaficharfeoe.viewmodel.FichajeViewModel
 import com.example.programaficharfeoe.ui.utils.obtenerColorFichaje
 import com.example.programaficharfeoe.ui.utils.obtenerIconoFichaje
 import com.example.programaficharfeoe.ui.components.LoadingView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.example.programaficharfeoe.ui.components.AppCard
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FichajeScreen() {
 
@@ -73,38 +85,87 @@ fun FichajeScreen() {
     ) {
 
         // HEADER
-        FichajeHeader()
+        FichajeHeader(
+            estadoActual = dashboardViewModel.uiState.estadoActual
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (state.accionesDisponibles.isEmpty()) {
             Text("No hay acciones disponibles ahora mismo")
         } else {
+            state.accionesDisponibles.forEachIndexed { index, accionCompleta ->
 
-            state.accionesDisponibles.forEach { accionCompleta ->
+                val visibleState = remember {
+                    mutableStateOf(false)
+                }
+
+                LaunchedEffect(Unit) {
+
+                    delay(index * 90L)
+
+                    visibleState.value = true
+                }
 
                 val texto = accionCompleta.replace("_", " ")
 
                 val color = obtenerColorFichaje(accionCompleta)
 
-                Button(
-                    onClick = {
-                        fichajeViewModel.fichar(
-                            context,
-                            userId,
-                            accionCompleta
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .height(60.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = color
+                AnimatedVisibility(
+
+                    visible = visibleState.value,
+
+                    enter = fadeIn(
+                        animationSpec = tween(400)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 40 },
+
+                        animationSpec = tween(400)
                     )
                 ) {
-                    Text(texto)
+
+                    AppCard(
+                        modifier = Modifier
+                            .padding(vertical = 6.dp),
+
+                        onClick = {
+
+                            fichajeViewModel.fichar(
+                                context,
+                                userId,
+                                accionCompleta
+                            )
+
+                            kotlinx.coroutines.CoroutineScope(
+                                kotlinx.coroutines.Dispatchers.Main
+                            ).launch {
+
+                                delay(200)
+
+                                dashboardViewModel.cargarDashboard(userId)
+                            }
+                        }
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .background(
+                                    color,
+                                    RoundedCornerShape(18.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Text(
+                                texto,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -145,9 +206,42 @@ fun FichajeScreen() {
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
 
-                    items(state.fichajesLocales.sortedByDescending { it.fechaHora }) { fichaje ->
-                        RegistroItem(fichaje)
-                        HorizontalDivider()
+                    itemsIndexed(
+                        state.fichajesLocales
+                            .sortedByDescending { it.fechaHora }
+                    ) { index, fichaje ->
+                        val visibleState = remember {
+                            mutableStateOf(false)
+                        }
+
+                        LaunchedEffect(Unit) {
+
+                            delay(index * 70L)
+
+                            visibleState.value = true
+                        }
+
+                        AnimatedVisibility(
+
+                            visible = visibleState.value,
+
+                            enter = fadeIn(
+                                animationSpec = tween(350)
+                            ) + slideInVertically(
+
+                                initialOffsetY = { 30 },
+
+                                animationSpec = tween(350)
+                            )
+                        ) {
+
+                            Column {
+
+                                RegistroItem(fichaje)
+
+                                HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
@@ -180,13 +274,8 @@ fun RegistroItem(
 
     val icono = obtenerIconoFichaje(tipo)
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
+    AppCard()
+    {
 
         Row(
             modifier = Modifier.padding(16.dp),

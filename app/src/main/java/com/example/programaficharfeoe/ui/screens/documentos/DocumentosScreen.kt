@@ -31,12 +31,57 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.programaficharfeoe.data.model.Documento
 import com.example.programaficharfeoe.viewmodel.DocumentosViewModel
-import com.example.programaficharfeoe.ui.components.LoadingView
 import com.example.programaficharfeoe.ui.components.ErrorView
 import com.example.programaficharfeoe.ui.components.AppCard
+import com.example.programaficharfeoe.ui.components.ShimmerDocumentItem
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.tween
+import kotlinx.coroutines.delay
 
 @Composable
-fun DocumentosMenuScreen(navController: NavController) {
+fun DocumentosMenuScreen(
+    navController: NavController
+) {
+
+    var visible by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        delay(120)
+
+        visible = true
+    }
+
+    val categorias = listOf(
+
+        Triple(
+            "Nóminas",
+            "Recibos salariales",
+            Icons.Default.PictureAsPdf
+        ),
+
+        Triple(
+            "EPIs",
+            "Equipos de protección",
+            Icons.Default.Security
+        ),
+
+        Triple(
+            "Formación",
+            "Cursos y certificados",
+            Icons.Default.School
+        ),
+
+        Triple(
+            "Reconocimientos",
+            "Informes médicos",
+            Icons.Default.Description
+        )
+    )
 
     Column(
         modifier = Modifier
@@ -44,57 +89,128 @@ fun DocumentosMenuScreen(navController: NavController) {
             .padding(16.dp)
     ) {
 
-        Header()
+        AnimatedVisibility(
 
-        Spacer(modifier = Modifier.height(20.dp))
+            visible = visible,
 
-        Text(
-            text = "Categorías",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            enter = fadeIn(
+                animationSpec = tween(700)
+            ) + slideInVertically(
+
+                initialOffsetY = { -80 },
+
+                animationSpec = tween(700)
+            )
+        ) {
+
+            Header()
+        }
+
+        Spacer(
+            modifier = Modifier.height(20.dp)
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        AnimatedVisibility(
 
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            visible = visible,
 
-            CategoriaCard(
-                titulo = "Nóminas",
-                subtitulo = "Recibos salariales",
-                icono = Icons.Default.PictureAsPdf
-            ) {
-                navController.navigate("documentos/nomina/Nóminas") {
-                    launchSingleTop = true
+            enter = fadeIn(
+                animationSpec = tween(650)
+            ) + slideInVertically(
+
+                initialOffsetY = { 40 },
+
+                animationSpec = tween(650)
+            )
+        ) {
+
+            Text(
+                text = "Categorías",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(14.dp)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+
+            categorias.forEachIndexed { index, categoria ->
+
+                var itemVisible by remember {
+                    mutableStateOf(false)
                 }
-            }
 
-            CategoriaCard(
-                titulo = "EPIs",
-                subtitulo = "Equipos de protección",
-                icono = Icons.Default.Security
-            ) {
-                navController.navigate("documentos/epis/EPIs") {
-                    launchSingleTop = true
+                LaunchedEffect(Unit) {
+
+                    delay(index * 120L)
+
+                    itemVisible = true
                 }
-            }
 
-            CategoriaCard(
-                titulo = "Formación",
-                subtitulo = "Cursos y certificados",
-                icono = Icons.Default.School
-            ) {
-                navController.navigate("documentos/formacion/Formación") {
-                    launchSingleTop = true
-                }
-            }
+                AnimatedVisibility(
 
-            CategoriaCard(
-                titulo = "Reconocimientos",
-                subtitulo = "Informes médicos",
-                icono = Icons.Default.Description
-            ) {
-                navController.navigate("documentos/reconocimiento/Reconocimientos") {
-                    launchSingleTop = true
+                    visible = itemVisible,
+
+                    enter = fadeIn(
+                        animationSpec = tween(450)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 40 },
+
+                        animationSpec = tween(450)
+                    )
+                ) {
+
+                    CategoriaCard(
+
+                        titulo = categoria.first,
+
+                        subtitulo = categoria.second,
+
+                        icono = categoria.third
+
+                    ) {
+
+                        when (categoria.first) {
+
+                            "Nóminas" -> {
+                                navController.navigate(
+                                    "documentos/nomina/Nóminas"
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+
+                            "EPIs" -> {
+                                navController.navigate(
+                                    "documentos/epis/EPIs"
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+
+                            "Formación" -> {
+                                navController.navigate(
+                                    "documentos/formacion/Formación"
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+
+                            "Reconocimientos" -> {
+                                navController.navigate(
+                                    "documentos/reconocimiento/Reconocimientos"
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -236,14 +352,28 @@ fun DocumentosScreen(
             .padding(16.dp)
     ) {
 
-        HeaderListado(titulo)
+        HeaderListado(
+            titulo = titulo,
+            cantidad = state.documentos.size
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 
         when {
 
             state.isLoading -> {
-                LoadingView()
+
+                LazyColumn(
+
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+
+                ) {
+
+                    items(6) {
+
+                        ShimmerDocumentItem()
+                    }
+                }
             }
 
             state.error != null -> {
@@ -298,39 +428,127 @@ fun DocumentosScreen(
 }
 
 @Composable
-fun HeaderListado(titulo: String) {
+fun HeaderListado(
+    titulo: String,
+    cantidad: Int
+) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(28.dp)
     ) {
+
         Box(
+
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
+
                     Brush.horizontalGradient(
+
                         listOf(
                             Color(0xFF1E3A8A),
-                            Color(0xFF2563EB)
+                            Color(0xFF2563EB),
+                            Color(0xFF3B82F6)
                         )
                     )
                 )
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
 
             Column {
 
-                Text(
-                    text = titulo,
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.16f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Icon(
+                            Icons.Default.Description,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.width(16.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+
+                        Text(
+                            text = titulo,
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(4.dp)
+                        )
+
+                        Text(
+                            text = "Tus documentos disponibles",
+                            color = Color.White.copy(alpha = 0.88f)
+                        )
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier.height(20.dp)
                 )
 
-                Text(
-                    text = "Tus documentos disponibles",
-                    color = Color.White.copy(alpha = 0.90f)
-                )
+                Surface(
+
+                    color = Color.White.copy(alpha = 0.16f),
+
+                    shape = RoundedCornerShape(50)
+
+                ) {
+
+                    Row(
+
+                        modifier = Modifier.padding(
+                            horizontal = 14.dp,
+                            vertical = 8.dp
+                        ),
+
+                        verticalAlignment = Alignment.CenterVertically
+
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(
+                                    Color(0xFF22C55E),
+                                    CircleShape
+                                )
+                        )
+
+                        Spacer(
+                            modifier = Modifier.width(10.dp)
+                        )
+
+                        Text(
+                            text = "$cantidad documentos",
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
         }
     }
@@ -349,56 +567,136 @@ fun DocumentoItem(
         else -> Icons.Default.Description
     }
 
+    val colorIcono = when (doc.tipo.lowercase()) {
+        "nomina" -> Color(0xFFEF4444)
+        "epis" -> Color(0xFFF59E0B)
+        "formacion" -> Color(0xFF22C55E)
+        else -> Color(0xFF3B82F6)
+    }
+
     AppCard(
         modifier = Modifier
             .clickable { onClick() }
     ) {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column {
 
+            // CABECERA VISUAL
             Box(
+
                 modifier = Modifier
-                    .size(48.dp)
+                    .fillMaxWidth()
                     .background(
-                        Color(0xFF2D6CFF).copy(alpha = 0.15f),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                        colorIcono.copy(alpha = 0.10f)
+                    )
+                    .padding(16.dp)
             ) {
-                Icon(
-                    imageVector = icono,
-                    contentDescription = null,
-                    tint = Color(0xFF2D6CFF)
-                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .background(
+                                colorIcono.copy(alpha = 0.18f),
+                                RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Icon(
+                            imageVector = icono,
+                            contentDescription = null,
+                            tint = colorIcono,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.width(14.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+
+                        Text(
+                            text = doc.nombre,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(6.dp)
+                        )
+
+                        Surface(
+
+                            shape = RoundedCornerShape(50),
+
+                            color = colorIcono.copy(alpha = 0.14f)
+
+                        ) {
+
+                            Text(
+
+                                text = doc.tipo.uppercase(),
+
+                                modifier = Modifier.padding(
+                                    horizontal = 10.dp,
+                                    vertical = 5.dp
+                                ),
+
+                                color = colorIcono,
+
+                                style = MaterialTheme.typography.bodySmall,
+
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.OpenInNew,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            // FOOTER
+            Row(
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = doc.nombre,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 12.dp
+                    ),
+
+                horizontalArrangement = Arrangement.SpaceBetween,
+
+                verticalAlignment = Alignment.CenterVertically
+
+            ) {
 
                 Text(
                     text = "Pulsa para abrir",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
 
-            Icon(
-                imageVector = Icons.Default.OpenInNew,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                Text(
+                    text = "PDF",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colorIcono
+                )
+            }
         }
     }
 }

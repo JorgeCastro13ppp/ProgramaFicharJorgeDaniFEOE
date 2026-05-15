@@ -13,12 +13,12 @@ sealed class BottomNavItem(
     val title: String,
     val icon: ImageVector
 ) {
-    object Home : BottomNavItem("home", "Home", Icons.Default.Home)
+    object Home : BottomNavItem("home", "Inicio", Icons.Default.Home)
 
     object Fichaje : BottomNavItem("fichaje", "Fichaje", Icons.Default.AccessTime)
     object Vacaciones : BottomNavItem("vacaciones", "Vacaciones", Icons.Default.BeachAccess)
     object Faltas : BottomNavItem("faltas", "Faltas", Icons.Default.EventBusy)
-    object Documentos : BottomNavItem("documentos", "Documentos", Icons.Default.Description)
+    object Documentos : BottomNavItem("documentos", "Docs", Icons.Default.Description)
 
 
 }

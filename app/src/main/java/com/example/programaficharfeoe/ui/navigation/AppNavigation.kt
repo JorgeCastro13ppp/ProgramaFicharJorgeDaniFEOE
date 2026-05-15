@@ -1,14 +1,22 @@
 package com.example.programaficharfeoe.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.*
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.example.programaficharfeoe.data.local.SessionManager
 import com.example.programaficharfeoe.ui.screens.login.LoginScreen
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.ExperimentalAnimationApi
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavigation() {
 
-    val navController = rememberNavController()
+    val navController = rememberAnimatedNavController()
 
     val startDestination =
         if (!SessionManager.getToken().isNullOrEmpty()) {
@@ -17,17 +25,76 @@ fun AppNavigation() {
             AppRoutes.Login.route
         }
 
-    NavHost(
+    AnimatedNavHost(
+
         navController = navController,
-        startDestination = startDestination
+
+        startDestination = startDestination,
+
+        enterTransition = {
+
+            slideIntoContainer(
+
+                AnimatedContentTransitionScope.SlideDirection.Left,
+
+                animationSpec = tween(300)
+            ) + fadeIn(
+                animationSpec = tween(300)
+            )
+        },
+
+        exitTransition = {
+
+            slideOutOfContainer(
+
+                AnimatedContentTransitionScope.SlideDirection.Left,
+
+                animationSpec = tween(300)
+            ) + fadeOut(
+                animationSpec = tween(300)
+            )
+        },
+
+        popEnterTransition = {
+
+            slideIntoContainer(
+
+                AnimatedContentTransitionScope.SlideDirection.Right,
+
+                animationSpec = tween(300)
+            ) + fadeIn(
+                animationSpec = tween(300)
+            )
+        },
+
+        popExitTransition = {
+
+            slideOutOfContainer(
+
+                AnimatedContentTransitionScope.SlideDirection.Right,
+
+                animationSpec = tween(300)
+            ) + fadeOut(
+                animationSpec = tween(300)
+            )
+        }
+
     ) {
 
-        // LOGIN
         composable(AppRoutes.Login.route) {
+
             LoginScreen(
+
                 onLoginSuccess = {
-                    navController.navigate(AppRoutes.Main.route) {
-                        popUpTo(AppRoutes.Login.route) {
+
+                    navController.navigate(
+                        AppRoutes.Main.route
+                    ) {
+
+                        popUpTo(
+                            AppRoutes.Login.route
+                        ) {
+
                             inclusive = true
                         }
                     }
@@ -35,14 +102,22 @@ fun AppNavigation() {
             )
         }
 
-        // MAIN
         composable(AppRoutes.Main.route) {
+
             MainScreen(
+
                 onLogout = {
+
                     SessionManager.clearSession()
 
-                    navController.navigate(AppRoutes.Login.route) {
-                        popUpTo(AppRoutes.Main.route) {
+                    navController.navigate(
+                        AppRoutes.Login.route
+                    ) {
+
+                        popUpTo(
+                            AppRoutes.Main.route
+                        ) {
+
                             inclusive = true
                         }
                     }

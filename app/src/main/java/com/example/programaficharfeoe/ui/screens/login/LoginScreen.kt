@@ -17,6 +17,19 @@ import com.example.programaficharfeoe.R
 import com.example.programaficharfeoe.viewmodel.LoginViewModel
 import com.example.programaficharfeoe.ui.components.AppButton
 import com.example.programaficharfeoe.ui.components.ErrorView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
@@ -25,6 +38,17 @@ fun LoginScreen(
     val viewModel: LoginViewModel = viewModel()
 
     val state = viewModel.uiState
+
+    var visible by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        delay(150)
+
+        visible = true
+    }
 
     LaunchedEffect(state.loginSuccess) {
         if (state.loginSuccess) {
@@ -37,7 +61,7 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
+                Brush.linearGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primaryContainer,
                         MaterialTheme.colorScheme.primary
@@ -56,16 +80,72 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(80.dp))
 
             // LOGO GRANDE
-            Image(
-                painter = painterResource(id = R.drawable.logoplantilla),
-                contentDescription = "Logo empresa",
-                modifier = Modifier.size(160.dp)
+            val infiniteTransition = rememberInfiniteTransition(
+                label = ""
             )
+
+            val logoScale by infiniteTransition.animateFloat(
+
+                initialValue = 1f,
+
+                targetValue = 1.04f,
+
+                animationSpec = infiniteRepeatable(
+
+                    animation = tween(1800),
+
+                    repeatMode = RepeatMode.Reverse
+                ),
+
+                label = ""
+            )
+
+            AnimatedVisibility(
+
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(700)
+                ) + slideInVertically(
+
+                    initialOffsetY = { -80 },
+
+                    animationSpec = tween(700)
+                )
+            ) {
+
+                Image(
+                    painter = painterResource(id = R.drawable.logoplantilla),
+                    contentDescription = "Logo empresa",
+
+                    modifier = Modifier
+                        .size(160.dp)
+                        .scale(logoScale)
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // TARJETA LOGIN
-            Card(
+            AnimatedVisibility(
+
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(900)
+                ) + slideInVertically(
+
+                    initialOffsetY = { 120 },
+
+                    animationSpec = tween(900)
+                ) + expandVertically(
+
+                    animationSpec = tween(900)
+                )
+            ) {
+
+                // TARJETA LOGIN
+                Card(
                 shape = RoundedCornerShape(20.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -121,7 +201,19 @@ fun LoginScreen(
                         isLoading = state.isLoading
                     )
 
-                    state.error?.let { error ->
+                    AnimatedVisibility(
+
+                        visible = state.error != null,
+
+                        enter = fadeIn(
+                            animationSpec = tween(300)
+                        ) + expandVertically(
+
+                            animationSpec = tween(300)
+                        )
+                    ) {
+
+                        state.error?.let { error ->
 
                         Spacer(
                             modifier = Modifier.height(16.dp)
@@ -135,5 +227,5 @@ fun LoginScreen(
                 }
             }
         }
-    }
+    }}}
 }

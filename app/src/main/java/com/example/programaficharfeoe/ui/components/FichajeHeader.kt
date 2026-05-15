@@ -13,9 +13,49 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.scale
 
 @Composable
-fun FichajeHeader() {
+fun FichajeHeader(
+    estadoActual: String?
+) {
+
+    val colorEstado = when {
+
+        estadoActual?.contains("ENTRADA") == true ->
+            Color(0xFF22C55E)
+
+        estadoActual?.contains("PAUSA") == true ->
+            Color(0xFFF59E0B)
+
+        else ->
+            Color.LightGray
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(
+        label = ""
+    )
+
+    val scaleAnim by infiniteTransition.animateFloat(
+
+        initialValue = 1f,
+
+        targetValue = 1.25f,
+
+        animationSpec = infiniteRepeatable(
+
+            animation = tween(
+                durationMillis = 900
+            ),
+
+            repeatMode = RepeatMode.Reverse
+        ),
+
+        label = ""
+    )
 
     Card(
         shape = RoundedCornerShape(24.dp)
@@ -36,6 +76,7 @@ fun FichajeHeader() {
         ) {
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -48,6 +89,31 @@ fun FichajeHeader() {
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Column {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .scale(scaleAnim)
+                                .background(
+                                    colorEstado,
+                                    CircleShape
+                                )
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = estadoActual ?: "Sin estado",
+                            color = Color.White.copy(alpha = 0.95f),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         "Fichaje",

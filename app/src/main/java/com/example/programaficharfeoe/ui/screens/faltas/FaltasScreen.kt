@@ -25,7 +25,24 @@ import com.example.programaficharfeoe.viewmodel.FaltasViewModel
 import com.example.programaficharfeoe.ui.components.LoadingView
 import com.example.programaficharfeoe.ui.components.ErrorView
 import com.example.programaficharfeoe.ui.components.AppCard
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.scale
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FaltasScreen(
     viewModel: FaltasViewModel = viewModel()
@@ -36,6 +53,17 @@ fun FaltasScreen(
     }
 
     val state = viewModel.uiState
+
+    var visible by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        delay(120)
+
+        visible = true
+    }
 
     val faltas = state.faltas
 
@@ -52,40 +80,69 @@ fun FaltasScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // 🔵 HEADER
+        // HEADER
         item {
-            Card(shape = RoundedCornerShape(24.dp)) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color(0xFF1E3A8A),
-                                    Color(0xFF2563EB)
+
+            AnimatedVisibility(
+
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(700)
+                ) + slideInVertically(
+
+                    initialOffsetY = { -80 },
+
+                    animationSpec = tween(700)
+                )
+            ) {
+
+                Card(
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color(0xFF1E3A8A),
+                                        Color(0xFF2563EB)
+                                    )
                                 )
                             )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                            .padding(20.dp)
+                    ) {
 
-                        Icon(Icons.Default.EventBusy, null, tint = Color.White)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column {
-                            Text(
-                                "Faltas",
-                                color = Color.White,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                Icons.Default.EventBusy,
+                                null,
+                                tint = Color.White
                             )
 
-                            Text(
-                                "Incidencias y ausencias",
-                                color = Color.White.copy(alpha = 0.9f)
+                            Spacer(
+                                modifier = Modifier.width(10.dp)
                             )
+
+                            Column {
+
+                                Text(
+                                    "Faltas",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    "Incidencias y ausencias",
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
                         }
                     }
                 }
@@ -93,17 +150,74 @@ fun FaltasScreen(
         }
 
         // RESUMEN PRO
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            item {
 
-                Resumen("Justificadas", justificadas, Color(0xFF22C55E), Modifier.weight(1f))
-                Resumen("Retrasos", retrasos, Color(0xFFF59E0B), Modifier.weight(1f))
-                Resumen("Injustificadas", injustificadas, Color(0xFFEF4444), Modifier.weight(1f))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+
+                    listOf(
+
+                        Triple(
+                            "Justificadas",
+                            justificadas,
+                            Color(0xFF22C55E)
+                        ),
+
+                        Triple(
+                            "Retrasos",
+                            retrasos,
+                            Color(0xFFF59E0B)
+                        ),
+
+                        Triple(
+                            "Injustificadas",
+                            injustificadas,
+                            Color(0xFFEF4444)
+                        )
+
+                    ).forEachIndexed { index, item ->
+
+                        val visibleState = remember {
+                            mutableStateOf(false)
+                        }
+
+                        LaunchedEffect(Unit) {
+
+                            delay(index * 120L)
+
+                            visibleState.value = true
+                        }
+
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            androidx.compose.animation.AnimatedVisibility(
+
+                                visible = visibleState.value,
+
+                                enter = fadeIn(
+                                    animationSpec = tween(500)
+                                ) + slideInVertically(
+
+                                    initialOffsetY = { 40 },
+
+                                    animationSpec = tween(500)
+                                )
+                            ) {
+
+                                Resumen(
+                                    titulo = item.first,
+                                    valor = item.second,
+                                    color = item.third
+                                )
+                            }
+                        }
+                    }
+                }
             }
-        }
 
         // HISTORIAL
         item {
@@ -140,8 +254,37 @@ fun FaltasScreen(
 
             else -> {
 
-                items(faltas.sortedByDescending { it.fecha }) { falta ->
-                    FaltaItem(falta)
+                itemsIndexed(
+                    faltas.sortedByDescending { it.fecha }
+                ) { index, falta ->
+
+                    val visibleState = remember {
+                        mutableStateOf(false)
+                    }
+
+                    LaunchedEffect(Unit) {
+
+                        delay(index * 70L)
+
+                        visibleState.value = true
+                    }
+
+                    AnimatedVisibility(
+
+                        visible = visibleState.value,
+
+                        enter = fadeIn(
+                            animationSpec = tween(350)
+                        ) + slideInVertically(
+
+                            initialOffsetY = { 30 },
+
+                            animationSpec = tween(350)
+                        )
+                    ) {
+
+                        FaltaItem(falta)
+                    }
                 }
             }
         }
@@ -156,6 +299,26 @@ fun Resumen(
     modifier: Modifier = Modifier
 ) {
 
+    val infiniteTransition = rememberInfiniteTransition(
+        label = ""
+    )
+
+    val scaleAnim by infiniteTransition.animateFloat(
+
+        initialValue = 1f,
+
+        targetValue = 1.35f,
+
+        animationSpec = infiniteRepeatable(
+
+            animation = tween(900),
+
+            repeatMode = RepeatMode.Reverse
+        ),
+
+        label = ""
+    )
+
     AppCard(
         modifier = modifier
     ) {
@@ -169,6 +332,7 @@ fun Resumen(
             Box(
                 modifier = Modifier
                     .size(8.dp)
+                    .scale(scaleAnim)
                     .background(color, CircleShape)
             )
 

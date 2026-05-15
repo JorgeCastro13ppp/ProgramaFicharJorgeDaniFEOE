@@ -26,6 +26,17 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import com.example.programaficharfeoe.ui.components.AppCard
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -54,6 +65,17 @@ fun HomeScreen(
 
     val estadoColor = getEstadoColor(estado)
 
+    var visible by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        delay(120)
+
+        visible = true
+    }
+
     // PULL REFRESH
     val pullRefreshState = rememberPullRefreshState(
         refreshing = cargando,
@@ -80,15 +102,49 @@ fun HomeScreen(
             // ESTADO
             item {
 
-                AppCard {
+                AnimatedVisibility(
+
+                    visible = visible,
+
+                    enter = fadeIn(
+                        animationSpec = tween(500)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 40 },
+
+                        animationSpec = tween(500)
+                    )
+                ) {
+
+                    AppCard {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
+                        val infiniteTransition = rememberInfiniteTransition(
+                            label = ""
+                        )
+
+                        val alphaAnim by infiniteTransition.animateFloat(
+
+                            initialValue = 0.4f,
+                            targetValue = 1f,
+
+                            animationSpec = infiniteRepeatable(
+
+                                animation = tween(900),
+
+                                repeatMode = RepeatMode.Reverse
+                            ),
+
+                            label = ""
+                        )
+
                         Box(
                             modifier = Modifier
                                 .size(14.dp)
+                                .alpha(alphaAnim)
                                 .background(estadoColor, CircleShape)
                         )
 
@@ -103,16 +159,32 @@ fun HomeScreen(
                             )
                         }
                     }
-                }
+                }}
             }
 
             // VACACIONES
             item {
-                VacacionesCard(
-                    restantes = diasRestantes,
-                    libresRestantes = diasLibres,
-                    navidadRestantes = diasNavidad
-                )
+
+                AnimatedVisibility(
+
+                    visible = visible,
+
+                    enter = fadeIn(
+                        animationSpec = tween(650)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 60 },
+
+                        animationSpec = tween(650)
+                    )
+                ) {
+
+                    VacacionesCard(
+                        restantes = diasRestantes,
+                        libresRestantes = diasLibres,
+                        navidadRestantes = diasNavidad
+                    )
+                }
             }
 
             // ÚLTIMO FICHAJE
@@ -145,11 +217,37 @@ fun HomeScreen(
                 Text("Actividad reciente", fontWeight = FontWeight.Bold)
             }
 
-            items(
-                items = fichajes.takeLast(3).reversed()
-            ) { fichaje ->
+            itemsIndexed(
+                fichajes.takeLast(3).reversed()
+            ) { index, fichaje ->
 
-                RegistroItem(fichaje)
+                var itemVisible by remember {
+                    mutableStateOf(false)
+                }
+
+                LaunchedEffect(Unit) {
+
+                    delay(index * 120L)
+
+                    itemVisible = true
+                }
+
+                AnimatedVisibility(
+
+                    visible = itemVisible,
+
+                    enter = fadeIn(
+                        animationSpec = tween(400)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 30 },
+
+                        animationSpec = tween(400)
+                    )
+                ) {
+
+                    RegistroItem(fichaje)
+                }
             }
         }
 

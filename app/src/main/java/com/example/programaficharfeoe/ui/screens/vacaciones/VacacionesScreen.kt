@@ -29,8 +29,23 @@ import java.util.Calendar
 import com.example.programaficharfeoe.ui.components.LoadingView
 import com.example.programaficharfeoe.ui.components.ErrorView
 import com.example.programaficharfeoe.ui.components.AppButton
-import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.alpha
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun VacacionesScreen(
     viewModel: VacacionesViewModel = viewModel()
@@ -39,9 +54,24 @@ fun VacacionesScreen(
     val dashboardViewModel: DashboardViewModel = viewModel()
     val vacacionesState = viewModel.uiState
 
+    var visible by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+
+        kotlinx.coroutines.delay(120)
+
+        visible = true
+    }
+
     var fechaInicio by remember { mutableStateOf("") }
     var fechaFin by remember { mutableStateOf("") }
     var errorFechas by remember { mutableStateOf<String?>(null) }
+
+    var enviandoSolicitud by remember {
+        mutableStateOf(false)
+    }
 
     val dashboardState = dashboardViewModel.uiState
 
@@ -98,49 +128,66 @@ fun VacacionesScreen(
     ) {
 
         item {
+            AnimatedVisibility(
 
-            // HEADER
-            Card(
-                shape = RoundedCornerShape(24.dp)
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(700)
+                ) + slideInVertically(
+
+                    initialOffsetY = { -80 },
+
+                    animationSpec = tween(700)
+                )
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color(0xFF1E3A8A),
-                                    Color(0xFF2563EB)
+
+                Card(
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color(0xFF1E3A8A),
+                                        Color(0xFF2563EB)
+                                    )
                                 )
                             )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(20.dp)
                     ) {
 
-                        Icon(
-                            Icons.Default.BeachAccess,
-                            null,
-                            tint = Color.White
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column {
-
-                            Text(
-                                "Vacaciones",
-                                color = Color.White,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                Icons.Default.BeachAccess,
+                                null,
+                                tint = Color.White
                             )
 
-                            Text(
-                                "Solicita y revisa tus vacaciones",
-                                color = Color.White.copy(alpha = 0.9f)
+                            Spacer(
+                                modifier = Modifier.width(10.dp)
                             )
+
+                            Column {
+
+                                Text(
+                                    "Vacaciones",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Text(
+                                    "Solicita y revisa tus vacaciones",
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
                         }
                     }
                 }
@@ -149,21 +196,51 @@ fun VacacionesScreen(
 
         // RESUMEN
         item {
-            VacacionesCard(
-                restantes = diasRestantes,
-                libresRestantes = diasLibres,
-                navidadRestantes = diasNavidad
-            )
+
+            AnimatedVisibility(
+
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(650)
+                ) + slideInVertically(
+
+                    initialOffsetY = { 60 },
+
+                    animationSpec = tween(650)
+                )
+            ) {
+
+                VacacionesCard(
+                    restantes = diasRestantes,
+                    libresRestantes = diasLibres,
+                    navidadRestantes = diasNavidad
+                )
+            }
         }
 
         // SOLICITUD
         item {
+            AnimatedVisibility(
 
-            Text(
-                text = "Nueva solicitud",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+                visible = visible,
+
+                enter = fadeIn(
+                    animationSpec = tween(750)
+                ) + slideInVertically(
+
+                    initialOffsetY = { 40 },
+
+                    animationSpec = tween(750)
+                )
+            ) {
+
+                Text(
+                    text = "Nueva solicitud",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         item {
@@ -190,7 +267,12 @@ fun VacacionesScreen(
 
             AppButton(
 
-                text = "Enviar solicitud",
+                text = if (enviandoSolicitud)
+                    "Enviando..."
+                else
+                    "Enviar solicitud",
+
+                isLoading = enviandoSolicitud,
 
                 onClick = {
 
@@ -207,6 +289,8 @@ fun VacacionesScreen(
 
                         errorFechas = null
 
+                        enviandoSolicitud = true
+
                         viewModel.solicitarVacaciones(
                             fechaInicio,
                             fechaFin
@@ -216,29 +300,114 @@ fun VacacionesScreen(
             )
         }
 
-        errorFechas?.let {
-            item {
+        item {
+
+            AnimatedVisibility(
+
+                visible = errorFechas != null,
+
+                enter = fadeIn() +
+                        slideInVertically(
+                            initialOffsetY = { -40 }
+                        ) +
+                        expandVertically(),
+
+                exit = fadeOut() +
+                        slideOutVertically(
+                            targetOffsetY = { -40 }
+                        ) +
+                        shrinkVertically()
+
+            ) {
+
                 Text(
-                    text = it,
+                    text = errorFechas ?: "",
                     color = MaterialTheme.colorScheme.error
                 )
             }
         }
 
-        if (vacacionesState.solicitudOk) {
-            item {
-                Text(
-                    "Solicitud enviada correctamente",
-                    color = Color(0xFF22C55E)
-                )
+
+        item {
+
+            AnimatedVisibility(
+
+                visible = vacacionesState.solicitudOk,
+
+                enter = fadeIn() +
+                        slideInVertically(
+                            initialOffsetY = { -40 }
+                        ) +
+                        expandVertically(),
+
+                exit = fadeOut() +
+                        slideOutVertically(
+                            targetOffsetY = { -40 }
+                        ) +
+                        shrinkVertically()
+
+            ) {
+
+                Surface(
+
+                    shape = RoundedCornerShape(50),
+
+                    color = Color(0xFF22C55E).copy(alpha = 0.12f)
+
+                ) {
+
+                    Row(
+
+                        modifier = Modifier.padding(
+                            horizontal = 14.dp,
+                            vertical = 10.dp
+                        ),
+
+                        verticalAlignment = Alignment.CenterVertically
+
+                    ) {
+
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            null,
+                            tint = Color(0xFF22C55E)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = "Solicitud enviada correctamente",
+                            color = Color(0xFF22C55E),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
 
-        vacacionesState.errorSolicitud?.let {
-            item {
+        item {
+
+            AnimatedVisibility(
+
+                visible = vacacionesState.errorSolicitud != null,
+
+                enter = fadeIn() +
+                        slideInVertically(
+                            initialOffsetY = { -40 }
+                        ) +
+                        expandVertically(),
+
+                exit = fadeOut() +
+                        slideOutVertically(
+                            targetOffsetY = { -40 }
+                        ) +
+                        shrinkVertically()
+
+            ) {
 
                 ErrorView(
-                    message = vacacionesState.error ?: "Error desconocido"
+                    message = vacacionesState.errorSolicitud
+                        ?: "Error desconocido"
                 )
             }
         }
@@ -270,7 +439,38 @@ fun VacacionesScreen(
 
         } else {
 
-            items(vacacionesState.vacaciones) { v ->
+            itemsIndexed(
+                vacacionesState.vacaciones
+            ) { index, v ->
+
+                val visibleState = remember {
+                    mutableStateOf(false)
+                }
+
+                LaunchedEffect(Unit) {
+
+                    kotlinx.coroutines.delay(
+                        index * 80L
+                    )
+
+                    visibleState.value = true
+                }
+
+                LaunchedEffect(
+                    vacacionesState.solicitudOk,
+                    vacacionesState.errorSolicitud
+                ) {
+
+                    if (
+                        vacacionesState.solicitudOk ||
+                        vacacionesState.errorSolicitud != null
+                    ) {
+
+                        kotlinx.coroutines.delay(900)
+
+                        enviandoSolicitud = false
+                    }
+                }
 
                 val estado = v.estado.trim().uppercase()
 
@@ -298,20 +498,53 @@ fun VacacionesScreen(
                     else -> Icons.Default.CalendarMonth
                 }
 
-                AppCard {
+                AnimatedVisibility(
+
+                    visible = visibleState.value,
+
+                    enter = fadeIn(
+                        animationSpec = tween(400)
+                    ) + slideInVertically(
+
+                        initialOffsetY = { 40 },
+
+                        animationSpec = tween(400)
+                    )
+
+                ) {
 
                     Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.padding(16.dp)
                     ) {
 
-                        Icon(
-                            icono,
-                            null,
-                            tint = colorEstado
-                        )
+                        // Línea temporal
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .background(
+                                        colorEstado,
+                                        CircleShape
+                                    )
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(4.dp)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .width(2.dp)
+                                    .height(54.dp)
+                                    .alpha(0.35f)
+                                    .background(colorEstado)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
 
                         Column(
                             modifier = Modifier.weight(1f)
@@ -319,13 +552,52 @@ fun VacacionesScreen(
 
                             Text(
                                 "${v.fechaInicio} → ${v.fechaFin}",
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
                             )
 
-                            Text(
-                                estado,
-                                color = colorEstado
+                            Spacer(
+                                modifier = Modifier.height(10.dp)
                             )
+
+                            Surface(
+
+                                shape = RoundedCornerShape(50),
+
+                                color = colorEstado.copy(alpha = 0.12f)
+
+                            ) {
+
+                                Row(
+
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 6.dp
+                                    ),
+
+                                    verticalAlignment = Alignment.CenterVertically
+
+                                ) {
+
+                                    Icon(
+                                        icono,
+                                        null,
+                                        tint = colorEstado,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+
+                                    Spacer(
+                                        modifier = Modifier.width(6.dp)
+                                    )
+
+                                    Text(
+                                        text = estado,
+                                        color = colorEstado,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -350,44 +622,98 @@ fun DatePickerField(
         mutableStateOf(false)
     }
 
+    var focused by remember {
+        mutableStateOf(false)
+    }
+
+    val borderColor by animateColorAsState(
+
+        targetValue = if (focused)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+
+        label = ""
+    )
+
     val datePickerState =
         rememberDatePickerState()
 
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        OutlinedTextField(
-            value = selectedDate,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            modifier = Modifier.fillMaxWidth(),
-            trailingIcon = {
-                Icon(
-                    Icons.Default.CalendarMonth,
-                    null
-                )
-            }
-        )
+    AppCard {
 
         Box(
             modifier = Modifier
-                .matchParentSize()
-                .clickable {
-                    showDialog = true
+                .fillMaxWidth()
+                .border(
+                    width = 1.5.dp,
+                    brush = SolidColor(borderColor),
+                    shape = RoundedCornerShape(18.dp)
+                )
+                .padding(horizontal = 14.dp, vertical = 4.dp)
+        ) {
+
+            OutlinedTextField(
+
+                value = selectedDate,
+
+                onValueChange = {},
+
+                readOnly = true,
+
+                label = {
+                    Text(label)
+                },
+
+                modifier = Modifier.fillMaxWidth(),
+
+                colors = OutlinedTextFieldDefaults.colors(
+
+                    focusedBorderColor = Color.Transparent,
+
+                    unfocusedBorderColor = Color.Transparent
+                ),
+
+                trailingIcon = {
+
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        null,
+                        tint = if (focused)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-        )
+            )
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable {
+
+                        focused = true
+
+                        showDialog = true
+                    }
+            )
+        }
     }
 
     if (showDialog) {
 
         DatePickerDialog(
+
             onDismissRequest = {
+
+                focused = false
+
+                showDialog = false
             },
 
             confirmButton = {
+
                 TextButton(
+
                     onClick = {
 
                         val millis =
@@ -409,21 +735,34 @@ fun DatePickerField(
 
                             onDateSelected(fecha)
                         }
+
+                        focused = false
+
+                        showDialog = false
                     }
                 ) {
+
                     Text("OK")
                 }
             },
 
             dismissButton = {
+
                 TextButton(
+
                     onClick = {
+
+                        focused = false
+
+                        showDialog = false
                     }
                 ) {
+
                     Text("Cancelar")
                 }
             }
         ) {
+
             DatePicker(
                 state = datePickerState
             )
